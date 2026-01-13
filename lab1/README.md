@@ -134,11 +134,6 @@ For your lab submission, record:
 
 Small numerical differences are expected due to floating-point precision.
 
-### Discussion Questions
-- Why should FK computed by the controller match the GUI pose?
-- What might cause discrepancies between FK and GUI pose?
-- How could TCP offsets or calibration affect this comparison?
-
   ---
 
 ## 6. Inverse Kinematics & Safe Motion
@@ -190,12 +185,6 @@ Try several target poses and observe:
 - Which poses fail (e.g., unreachable, singular)?
 - How does the robot behave near joint limits?
 - Does enabling collision detection change behavior?
-
-## Discussion Questions
-- Why might a pose be geometrically reachable but unsafe?
-- Why is it dangerous to test IK at high joint speeds?
-- Why should faults be cleared before attempting motion?
-- How could IK failures affect data collection in robot learning?
 
 ---
 
@@ -275,5 +264,11 @@ Include answers in your GitHub README or a separate markdown file.
 2. What safety mechanisms were active during replay?
 3. What could go wrong if replay speed is too high?
 4. Why might joint-space replay be safer than Cartesian replay?
-5. Where would GELLO inputs be integrated in the provided code?
-6. How might teleoperation demonstrations differ in quality from GUI recordings?
+5. How might teleoperation demonstrations differ in quality from GUI recordings?
+6. Why should FK computed by the controller match the GUI pose?
+7. What might cause discrepancies between FK and GUI pose?
+8. How could TCP offsets or calibration affect this comparison?
+9. Why might a pose be geometrically reachable but unsafe?
+10. Why is it dangerous to test IK at high joint speeds?
+11. Why should faults be cleared before attempting motion?
+12. How could IK failures affect data collection in robot learning?
