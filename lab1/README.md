@@ -126,18 +126,18 @@ python scripts/01_fk_vs_gui_pose.py --ip <ROBOT_IP>
 ### What to Record
 
 For your lab submission, record:
-	-	Joint angles used (in radians)
-	-	GUI-reported TCP pose
-	-	FK-computed TCP pose
-	-	Position error (Euclidean norm in mm)
-	-	Orientation error (Euclidean norm in radians)
+- Joint angles used (in radians)
+- GUI-reported TCP pose
+- FK-computed TCP pose
+- Position error (Euclidean norm in mm)
+- Orientation error (Euclidean norm in radians)
 
 Small numerical differences are expected due to floating-point precision.
 
 ### Discussion Questions
--	Why should FK computed by the controller match the GUI pose?
--	What might cause discrepancies between FK and GUI pose?
--	How could TCP offsets or calibration affect this comparison?
+- Why should FK computed by the controller match the GUI pose?
+- What might cause discrepancies between FK and GUI pose?
+- How could TCP offsets or calibration affect this comparison?
 
   ---
 
