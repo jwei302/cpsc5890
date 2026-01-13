@@ -83,9 +83,9 @@ python scripts/00_basic_test.py --ip <ROBOT_IP>
 
 This script should:
   - Connect to the robot
-	-	Print joint angles
-	-	Print TCP pose
-	-	Exit cleanly
+  - Print joint angles
+  - Print TCP pose
+  - Exit cleanly
 
 If this does not work, **do not move on** ask a TF.
 
@@ -176,12 +176,12 @@ The pose is specified as:
 What the Script Should Do
 
 Your implementation should:
-	1.	Connect to the robot
-	2.	Clear any existing warnings or errors
-	3.	Enable safety features (collision detection, self-collision checking)
-	4.	Compute an IK solution for the target pose
-	5.	Move the robot using low joint speeds
-	6.	Exit cleanly
+1. Connect to the robot
+2. Clear any existing warnings or errors
+3. Enable safety features (collision detection, self-collision checking)
+4. Compute an IK solution for the target pose
+5. Move the robot using low joint speeds
+6. Exit cleanly
 
 If IK fails, the script should not move the robot.
 
@@ -238,3 +238,42 @@ Open the saved trajectory file and check:
 Think about:
 	- How sampling rate affects smoothness
 	- How noise in demonstrations might affect learning
+
+---
+
+## 8. Replay a Joint-Space Demonstration
+
+You will now replay a previously recorded joint-space trajectory using
+**joint-level position control**.
+
+This step reinforces the idea that a robot demonstration is simply a
+time-indexed sequence of commands.
+
+### Replaying the Trajectory
+
+Run:
+
+```bash
+python scripts/04_replay_joint_traj.py \
+  --ip <ROBOT_IP> \
+  --traj trajectories/demo1.json
+```
+
+## What to Observe
+
+Pay attention to:
+- Smoothness of motion
+- Timing fidelity relative to the original demonstration
+- Any warnings, errors, or collision stops
+
+---
+
+# Checkers (Submit Written Answers)
+
+Include answers in your GitHub README or a separate markdown file.
+1. Did the replayed trajectory match the original motion? Why or why not?
+2. What safety mechanisms were active during replay?
+3. What could go wrong if replay speed is too high?
+4. Why might joint-space replay be safer than Cartesian replay?
+5. Where would GELLO inputs be integrated in the provided code?
+6. How might teleoperation demonstrations differ in quality from GUI recordings?
