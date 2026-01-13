@@ -186,16 +186,16 @@ Your implementation should:
 If IK fails, the script should not move the robot.
 
 Try several target poses and observe:
-	- Which poses produce valid IK solutions?
-	- Which poses fail (e.g., unreachable, singular)?
-	- How does the robot behave near joint limits?
-	- Does enabling collision detection change behavior?
+- Which poses produce valid IK solutions?
+- Which poses fail (e.g., unreachable, singular)?
+- How does the robot behave near joint limits?
+- Does enabling collision detection change behavior?
 
-##Discussion Questions
-	- Why might a pose be geometrically reachable but unsafe?
-	- Why is it dangerous to test IK at high joint speeds?
-	- Why should faults be cleared before attempting motion?
-	- How could IK failures affect data collection in robot learning?
+## Discussion Questions
+- Why might a pose be geometrically reachable but unsafe?
+- Why is it dangerous to test IK at high joint speeds?
+- Why should faults be cleared before attempting motion?
+- How could IK failures affect data collection in robot learning?
 
 ---
 
@@ -217,27 +217,27 @@ python scripts/03_record_joint_traj.py \
 ```
 
 While recording:
-	- Move the robot slowly and smoothly
-	- Avoid abrupt changes in direction
-	- Stay away from joint limits and singular configurations
-	- Be ready to press the E-stop at all times
+- Move the robot slowly and smoothly
+- Avoid abrupt changes in direction
+- Stay away from joint limits and singular configurations
+- Be ready to press the E-stop at all times
 
 The script will save:
-	- Joint angles
-	- Timestamps
+- Joint angles
+- Timestamps
 
 in a JSON file.
 
 Inspecting the Recorded Trajectory
 
 Open the saved trajectory file and check:
-	- Number of recorded waypoints
-	- Time spacing between waypoints
-	- Range of joint angles
+- Number of recorded waypoints
+- Time spacing between waypoints
+- Range of joint angles
 
 Think about:
-	- How sampling rate affects smoothness
-	- How noise in demonstrations might affect learning
+- How sampling rate affects smoothness
+- How noise in demonstrations might affect learning
 
 ---
 
