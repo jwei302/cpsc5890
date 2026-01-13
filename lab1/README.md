@@ -36,7 +36,7 @@
    ```
 4) Install dependencies:
     ```bash
-       pip install -r requirements.txt
+    pip install -r requirements.txt
     ```
 Do **not** install packages system-wide.
     
