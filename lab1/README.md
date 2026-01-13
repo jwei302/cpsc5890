@@ -30,6 +30,10 @@
 1) Log in to the lab machine
 2) Clone this repo into your home directory
 3) Create / activate your Conda virtual python env
+   ```bash
+	conda create -n xarm_lab python=3.10 -y
+    conda activate xarm_lab
+   ```
 4) Install dependencies:
     ```bash
        pip install -r requirements.txt
