@@ -101,8 +101,6 @@ This step is critical for building intuition about:
 - units (mm vs meters, degrees vs radians)
 - what the robot controller considers the “true” pose
 
----
-
 ### Procedure
 
 1. Move the robot to a **simple, static configuration**
@@ -125,7 +123,7 @@ python scripts/01_fk_vs_gui_pose.py --ip <ROBOT_IP>
 	-	Read the TCP pose reported by the controller
 	-	Compute the difference between the two
 
-##What to Record
+### What to Record
 
 For your lab submission, record:
 	-	Joint angles used (in radians)
@@ -136,10 +134,10 @@ For your lab submission, record:
 
 Small numerical differences are expected due to floating-point precision.
 
-##Discussion Questions
-	-	Why should FK computed by the controller match the GUI pose?
-	-	What might cause discrepancies between FK and GUI pose?
-	-	How could TCP offsets or calibration affect this comparison?
+### Discussion Questions
+-	Why should FK computed by the controller match the GUI pose?
+-	What might cause discrepancies between FK and GUI pose?
+-	How could TCP offsets or calibration affect this comparison?
 
   ---
 
@@ -151,7 +149,6 @@ end-effector poses and execute them **safely** on the robot.
 This is your first time commanding autonomous motion from code.
 Proceed slowly and deliberately.
 
----
 
 ### Objectives
 
@@ -161,8 +158,6 @@ By the end of this section, you should be able to:
 - Compute an IK solution using the xArm SDK
 - Execute the resulting joint motion safely
 - Recognize when IK solutions are invalid or unsafe
-
----
 
 ### Running the IK Script
 
@@ -209,8 +204,6 @@ Try several target poses and observe:
 In this section, you will record a robot demonstration **in joint space** using
 the xArm Python SDK. This is a common way to collect data for robot learning,
 debugging, and system identification.
-
----
 
 ### Recording a Demonstration
 
