@@ -1,3 +1,4 @@
+"""
 Record a trajectory by using Joint Teaching (compliant / zero-gravity) mode.
 
 Workflow (high level):
