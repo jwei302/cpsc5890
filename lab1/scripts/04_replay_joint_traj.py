@@ -1,27 +1,48 @@
+"""
+Replay a recorded xArm trajectory file (.traj) using the SDK trajectory playback APIs.
+
+Workflow:
+  1) connect
+  2) enable motion
+  3) set normal mode (Mode 0)
+  4) load_trajectory(<traj>)
+  5) playback_trajectory()
+
+IMPORTANT:
+- Stand clear
+- Keep speeds conservative (trajectory playback is controller-defined)
+- Be ready to hit E-stop
+"""
+
 import argparse
-from xarm_lab.arm_utils import connect_arm, disconnect_arm, ArmConfig
-from xarm_lab.traj_io import load_traj
-from xarm_lab.safety import enable_basic_safety, clear_faults
+from xarm.wrapper import XArmAPI
+
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ip", required=True)
-    ap.add_argument("--traj", required=True)
+    ap.add_argument("--traj", required=True, help="Name of the .traj file recorded in teach mode")
     args = ap.parse_args()
 
-    traj = load_traj(args.traj)
-    arm = connect_arm(ArmConfig(ip=args.ip))
+    # TODO: initialize XArmAPI
+    arm = None
+
+    # TODO: connect
 
     try:
-        # TODO: clear faults
-        # TODO: enable safety
+        # TODO: enable motion
+        # TODO: set normal mode (Mode 0)
+        # TODO: set state ready
 
-        for qi in traj.q:
-            # TODO: send joint command (low speed)
-            pass
+        # TODO: load_trajectory(args.traj)
+        # TODO: playback_trajectory()
+
+        print("[OK] Playback command sent.")
 
     finally:
-        disconnect_arm(arm)
+        # TODO: disconnect
+        pass
+
 
 if __name__ == "__main__":
     main()
