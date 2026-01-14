@@ -205,7 +205,7 @@ Run the following command:
 ```bash
 python scripts/03_record_joint_traj.py \
   --ip <ROBOT_IP> \
-  --out trajectories/demo1.json \
+  --out demo1.traj \
   --seconds 8
 ```
 
@@ -249,7 +249,7 @@ Run:
 ```bash
 python scripts/04_replay_joint_traj.py \
   --ip <ROBOT_IP> \
-  --traj trajectories/demo1.json
+  --traj demo1.traj
 ```
 
 ## What to Observe
