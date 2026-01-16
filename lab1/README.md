@@ -1,5 +1,7 @@
 # Lab 1 — xArm7 Intro: Safety, GUI, FK/IK, Demos
 
+## Group Members: Jeffrey Wei, William Huang, Eric Li
+
 ## Objectives
 - Set up an account on the lab computer
 - Safety: turn the robot on/off, E-stop
