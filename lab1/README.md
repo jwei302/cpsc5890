@@ -209,6 +209,8 @@ python scripts/03_record_joint_traj.py \
   --seconds 8
 ```
 
+If you run into issues with data collection: It turns out the robot is very sensitive to the state it’s in when teaching mode is initiated. Sometimes it works, and sometimes it doesn’t. Solution: move the robot around first and then home it by clicking the Initial Position button in the GUI. After doing this, the code should work occasionally. Also, remember that we need to hold the robot when starting teaching mode. If you’re doing this by yourself, I recommend adding a few seconds of sleep before starting manual mode and positon control mode.
+
 While recording:
 - Move the robot slowly and smoothly
 - Avoid abrupt changes in direction
