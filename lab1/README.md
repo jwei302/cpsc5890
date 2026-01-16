@@ -269,7 +269,7 @@ Include answers in your GitHub README or a separate markdown file.
 1. Did the replayed trajectory match the original motion? *A:  Yes because it kept track of the joint angles and when replaying it replicates all the joint angles.*
 2. What safety mechanisms were active during replay? *A: We set the self collsion safety mechanism on to make sure in the replay the final state to initial state does not collide with itself.*
 3. What could go wrong if replay speed is too high? *A: If replay speed is too high there might be excess momentum that moves the arm beyond it's expected joint angle.*
-4. Why might joint-space replay be safer than Cartesian replay? *A: 
+4. Why might joint-space replay be safer than Cartesian replay? *A: Joint space replay is safer because the trajectory in joint-space is unique so we have full control over what trajectory the replay will take. In contrast, solving IK using the end effector pose in Cartesian does not provide a unique solution.*
 5. How might teleoperation demonstrations differ in quality from GUI recordings? *A: Since you are operating remotely, you are not certain if the teleoperated joint movements are exact. The GUI allows you to specify exact joint angle configurations and end effector position.*
 6. Why should FK computed by the controller match the GUI pose? *A: The solution is deterministic / unique so there is no ambiguity in the FK calculation.*
 7. What might cause discrepancies between FK and GUI pose? *A: Python has limited precision in its floating point representation so it's possible that there are small inaccuracies.*
