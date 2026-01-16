@@ -14,7 +14,7 @@ def fk_from_joints(arm: XArmAPI, joints: List[float]) -> List[float]:
     - Look for a function with 'forward_kinematics' in the SDK
     """
     # TODO
-    raise NotImplementedError
+    return arm.get_forward_kinematics(joints)[1]
 
 
 def ik_from_pose(arm: XArmAPI, pose: List[float]) -> List[float]:
@@ -24,4 +24,4 @@ def ik_from_pose(arm: XArmAPI, pose: List[float]) -> List[float]:
     pose = [x, y, z, roll, pitch, yaw]
     """
     # TODO
-    raise NotImplementedError
+    return arm.get_inverse_kinematics(pose)[1]

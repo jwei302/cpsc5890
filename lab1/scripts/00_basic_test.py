@@ -10,7 +10,9 @@ def main():
 
     try:
         # TODO: print joint angles
+        print(get_joint_angles(arm))
         # TODO: print TCP pose
+        print(get_tcp_pose(arm))
         pass
     finally:
         disconnect_arm(arm)

@@ -32,31 +32,39 @@ def main():
     args = ap.parse_args()
 
     # TODO: initialize XArmAPI (recommend is_radian=True)
-    arm = None
+    arm = XArmAPI(args.ip, is_radian=True)
 
     # TODO: connect
+    arm.connect()
 
     try:
         # TODO: enable motion
+        arm.motion_enable(enable=True)
         # TODO: set state ready
-
+        arm.set_state(0)
         # TODO: set mode to joint teaching (Mode 2)
-
+        arm.set_mode(2)
+        arm.set_state(0)
         # TODO: start_record_trajectory()
-
+        arm.start_record_trajectory()
         print(f"[INFO] Recording for {args.seconds:.1f}s. Guide the robot NOW.")
         time.sleep(args.seconds)
 
         # TODO: stop_record_trajectory()
+        arm.stop_record_trajectory()
 
         # TODO: save_record_trajectory(str(out_path))
-
-        print(f"[OK] Saved trajectory to: {out_path}")
+        arm.save_record_trajectory(str(args.out))
+        time.sleep(2)
+        print(f"[OK] Saved trajectory to: {str(args.out)}")
 
     finally:
         # TODO: set mode back to normal (Mode 0)
+        arm.set_mode(0)
+        arm.set_state(0)
         # TODO: set state ready
         # TODO: disconnect
+        arm.disconnect()
         pass
 
 

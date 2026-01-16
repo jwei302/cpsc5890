@@ -25,22 +25,30 @@ def main():
     args = ap.parse_args()
 
     # TODO: initialize XArmAPI
-    arm = None
+    arm = XArmAPI(args.ip, is_radian=True)
 
     # TODO: connect
+    arm.connect()
+    arm.set_self_collision_detection(on_off=True)
 
     try:
         # TODO: enable motion
+        arm.motion_enable(enable=True)
         # TODO: set normal mode (Mode 0)
+        arm.set_mode(0)
         # TODO: set state ready
+        arm.set_state(0)
 
         # TODO: load_trajectory(args.traj)
+        arm.load_trajectory(args.traj)
         # TODO: playback_trajectory()
+        arm.playback_trajectory()
 
         print("[OK] Playback command sent.")
 
     finally:
         # TODO: disconnect
+        arm.disconnect()
         pass
 
 

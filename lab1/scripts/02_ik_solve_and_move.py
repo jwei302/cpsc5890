@@ -23,15 +23,20 @@ def main():
 
     try:
         # TODO: clear faults
+        clear_faults(arm)
         # TODO: enable safety
+        enable_basic_safety(arm)
 
         target_pose = [args.x, args.y, args.z, args.roll, args.pitch, args.yaw]
 
         # TODO: compute IK
-        q_sol = None
+        q_sol = ik_from_pose(arm, target_pose)
 
         # TODO: move robot using joint command
         # IMPORTANT: keep speed LOW
+
+        arm.set_servo_angle(angle=q_sol, speed=0.1, is_radian=arm._is_radian)
+
 
     finally:
         disconnect_arm(arm)

@@ -15,7 +15,7 @@ def enable_basic_safety(arm: XArmAPI):
     - Look for 'collision' and 'self_collision' in SDK docs.
     """
     # TODO
-    pass
+    arm.set_self_collision_detection(on_off=True)
 
 
 def clear_faults(arm: XArmAPI):
@@ -23,4 +23,6 @@ def clear_faults(arm: XArmAPI):
     Clear warnings and errors if robot is in a fault state.
     """
     # TODO
-    pass
+
+    arm.clean_error()
+    arm.clean_warn()

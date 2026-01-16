@@ -18,16 +18,16 @@ def main():
 
     try:
         # TODO: read joint angles
-        q = None
+        q = get_joint_angles(arm)
 
         # TODO: get GUI TCP pose
-        gui_pose = None
+        gui_pose = get_tcp_pose(arm)
 
         # TODO: compute FK pose
-        fk_pose = None
+        fk_pose = fk_from_joints(arm, q)
 
         # TODO: compute difference
-        diff = None
+        diff = [fk_pose[i] - gui_pose[i] for i in range(len(gui_pose))]
 
         print("Joint angles:", q)
         print("GUI pose:", gui_pose)

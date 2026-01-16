@@ -72,8 +72,8 @@ Tasks:
 4. Replay the recorded trajectory
 
 Answer the following:
-- What coordinate frame is the TCP pose reported in?
-- What are the units for position and orientation?
+- What coordinate frame is the TCP pose reported in? base frame
+- What are the units for position and orientation? mm, degrees
 
 ---
 
@@ -264,15 +264,15 @@ Pay attention to:
 # Checkers (Submit Written Answers)
 
 Include answers in your GitHub README or a separate markdown file.
-1. Did the replayed trajectory match the original motion? Why or why not?
-2. What safety mechanisms were active during replay?
-3. What could go wrong if replay speed is too high?
-4. Why might joint-space replay be safer than Cartesian replay?
-5. How might teleoperation demonstrations differ in quality from GUI recordings?
-6. Why should FK computed by the controller match the GUI pose?
-7. What might cause discrepancies between FK and GUI pose?
-8. How could TCP offsets or calibration affect this comparison?
-9. Why might a pose be geometrically reachable but unsafe?
-10. Why is it dangerous to test IK at high joint speeds?
-11. Why should faults be cleared before attempting motion?
-12. How could IK failures affect data collection in robot learning?
+1. Did the replayed trajectory match the original motion? *A:  Yes because it kept track of the joint angles and when replaying it replicates all the joint angles.*
+2. What safety mechanisms were active during replay? *A: We set the self collsion safety mechanism on to make sure in the replay the final state to initial state does not collide with itself.*
+3. What could go wrong if replay speed is too high? *A: If replay speed is too high there might be excess momentum that moves the arm beyond it's expected joint angle.*
+4. Why might joint-space replay be safer than Cartesian replay? *A: 
+5. How might teleoperation demonstrations differ in quality from GUI recordings? *A: Since you are operating remotely, you are not certain if the teleoperated joint movements are exact. The GUI allows you to specify exact joint angle configurations and end effector position.*
+6. Why should FK computed by the controller match the GUI pose? *A: The solution is deterministic / unique so there is no ambiguity in the FK calculation.*
+7. What might cause discrepancies between FK and GUI pose? *A: Python has limited precision in its floating point representation so it's possible that there are small inaccuracies.*
+8. How could TCP offsets or calibration affect this comparison? *A: Offseting the end effector post-forward kinematics would not match the offset from the GUI.*
+9. Why might a pose be geometrically reachable but unsafe? *A: There could be collisions with the robot itself on its way to reach the pose, or collide with other objects.*
+10. Why is it dangerous to test IK at high joint speeds? *A: Because solutions to IK is not unique, solving IK at high joint speeds may lead running a solution that was not previously tested (which could lead to a collision) and at high speeds we can not stop the robot in time.*
+11. Why should faults be cleared before attempting motion? *A: The faults are checking for possible unstable weight configurations of the robot, so by clearing this we are enabling that the robot can run as expected.*
+12. How could IK failures affect data collection in robot learning? *A:  Since IK solutions are not unique, collecting data in end effector space could lead to multiple soutions in joint angle space. Therefore, it is more effective to collect data in joint angle space.*

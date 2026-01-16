@@ -31,15 +31,20 @@ def connect_arm(cfg: ArmConfig) -> XArmAPI:
         XArmAPI instance
     """
     # TODO: initialize arm
-    arm = None
+    arm = XArmAPI(cfg.ip, is_radian=cfg.is_radian)
 
     # TODO: connect to robot
+    arm.connect()
 
     # TODO: clear warnings / errors
 
+    arm.clean_error()
     # TODO: enable motion
+    arm.motion_enable(enable=True)
 
     # TODO: set mode/state if needed
+    arm.set_mode(0)
+    arm.set_state(state=0)
 
     return arm
 
@@ -49,7 +54,7 @@ def get_joint_angles(arm: XArmAPI) -> List[float]:
     Return current joint angles.
     """
     # TODO: call SDK API
-    raise NotImplementedError
+    return arm.get_joint_states()[1][0]
 
 
 def get_tcp_pose(arm: XArmAPI) -> List[float]:
@@ -57,12 +62,11 @@ def get_tcp_pose(arm: XArmAPI) -> List[float]:
     Return TCP pose as [x, y, z, roll, pitch, yaw].
     """
     # TODO: call SDK API
-    raise NotImplementedError
-
+    return arm.get_position(is_radian=arm._is_radian)[1]
 
 def disconnect_arm(arm: XArmAPI) -> None:
     """
     Cleanly disconnect from robot.
     """
     # TODO: disconnect safely
-    pass
+    arm.disconnect()
