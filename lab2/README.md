@@ -25,6 +25,7 @@
    ```bash
    # Example: using GELLO teleoperation
    python scripts/collect_demo.py --mode gello --duration 10
+   ```
 
     Move smoothly and stay within safe workspace
 
@@ -50,15 +51,15 @@ Deliverable
 
     Notes on demonstration data and simple policy behavior
 
-Part 2: Behavior Cloning (≈1 hr)
+### Part 2: Behavior Cloning (≈1 hr)
 
-Goals
+**Goals**
 
     Train a policy from demonstration data
 
     Evaluate performance in simulation first for safety
 
-Procedure
+**Procedure**
 
     Dataset
 
