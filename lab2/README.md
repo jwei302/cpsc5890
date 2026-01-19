@@ -13,44 +13,18 @@
 
 ## Part 1: Understanding Demonstrations
 **Goals**
-- Learn how robot demonstrations are represented (joint states, EE axes)
-- Collect and replay a real demonstration
-- Analyze the demonstration data
+
 
 **Tasks**
-1. Collect a single demonstration on the robot  
-   ```bash
-   # Example: using GELLO teleoperation
-   python scripts/collect_demo.py --mode gello --duration 10
-   ```
 
-    Move smoothly and stay within safe workspace
-
-    Examine the collected data
-
-        Identify which values correspond to joint angles, EE positions, or EE orientation
-
-        Note timestamps and sampling frequency
-
-    Replay the demonstration on the robot
-
-    python scripts/replay_demo.py --traj demo1.traj
-
-    Understand how policies map states to actions
-
-    Implement a simple hand-coded policy
-
-        Example: Move EE in a straight line or follow a preset trajectory
-
-        Observe resulting behavior
-
-Deliverable
-
-    Notes on demonstration data and simple policy behavior
 
 ## Part 2: Behavior Cloning
 
+**Goals**
+
 In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
+
+**Tasks**
 
 ### Step 1: Train the BC model
 
