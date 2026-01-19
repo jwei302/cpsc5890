@@ -14,7 +14,7 @@
 
 ## Agenda & Procedure
 
-### Part 1: Understanding Demonstrations (≈45 mins)
+### Part 1: Understanding Demonstrations
 **Goals**
 - Learn how robot demonstrations are represented (joint states, EE axes)
 - Collect and replay a real demonstration
@@ -51,46 +51,23 @@ Deliverable
 
     Notes on demonstration data and simple policy behavior
 
-### Part 2: Behavior Cloning (≈1 hr)
+### Part 2: Behavior Cloning
 
-**Goals**
+In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
 
-    Train a policy from demonstration data
+This step is critical for building intuition about:
 
-    Evaluate performance in simulation first for safety
+how demonstrations are represented as data (joint states, EE positions, orientations)
 
-**Procedure**
+mapping states to actions via a policy
 
-    Dataset
+how model predictions compare to actual robot trajectories
 
-        Use pre-collected pick-and-place demonstrations (provided by TAs)
+# Procedure
 
-        Visualize trajectories and states
+Use a pre-recorded demonstrations to train a BC model.
 
-    Data Analysis
+```bash
 
-        Replay individual demonstrations in simulation
-
-        Plot distribution of visited states
-
-    Implementation
-
-        Fill in missing code in the BC template
-
-        Train the BC model on the dataset
-
-        Visualize training loss over time
-
-    Evaluation
-
-        Test trained model from multiple start states in simulation
-
-        Observe successes and failures
-
-        Develop evaluation metrics (e.g., success rate, EE distance error)
-
-        Record video clips of both success and failure cases with captions
-
-Deliverable
-
-    Video demonstrating BC performance with captions
+python scripts/bc.py --ip <robot_ip>
+```
