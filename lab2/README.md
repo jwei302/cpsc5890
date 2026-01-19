@@ -47,7 +47,7 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 - The robot will replay actions predicted by the BC model
 - Observe smoothness, accuracy, and timing relative to the original demonstration
 
-### What to record:
+### What to record
 1. Observe robot execution:
 * Are the movements smooth?
 * Do actions closely follow the demonstration?
@@ -63,7 +63,7 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 * Visualization of visited EEF states
 * Video of the robot performing the BC-inferred trajectory
 
-### Reflection Questions for Students
+### Reflection Questions
 * How closely does the BC model reproduce the original demonstrations?
 * Where does the model fail or deviate most significantly? Why might that happen?
 * What could go wrong if the robot starts from a pose outside the demonstration distribution?
