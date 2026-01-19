@@ -83,7 +83,7 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 - Observe smoothness, accuracy, and timing relative to the original demonstration
 
 # What to record:
-- Observe robot execution:
+-- Observe robot execution:
 
 * Are the movements smooth?
 
