@@ -319,34 +319,50 @@ def main():
                 obs_buffer = deque(maxlen=args.obs_horizon)
                 states, eef_states, actions = [], [], []
 
-                for _ in range(7):  # safety-limited horizon
-                    q = get_joint_angles(arm)
-                    g = get_gripper_position(arm)
-                    state = np.concatenate([q, [g]])
+                # === Robot BC execution loop (safety-limited horizon) ===
+                for _ in range(7):  # limit number of steps for safety
+                    # 1. Get current robot state
+                    q = get_joint_angles(arm)         # current joint angles
+                    g = get_gripper_position(arm)     # current gripper position
+                    state = np.concatenate([q, [g]])  # full observation vector
 
+                    # 2. Append to observation buffer (sliding window)
                     obs_buffer.append(state)
                     if len(obs_buffer) < args.obs_horizon:
-                        continue
+                        continue  # wait until we have enough history
 
+                    # 3. Stack observations into a single vector for the model
                     obs = np.concatenate(obs_buffer)
-                    x = torch.tensor((obs - X_mean) / X_std, dtype=torch.float32).to(device)
 
-                    with torch.no_grad():
-                        a_norm = model(x).cpu().numpy()
+                    # -------------------------------
+                    # TODO: Normalize observation
+                    x = None  # student to implement normalization
+                    # -------------------------------
 
-                    action = a_norm * Y_std + Y_mean
+                    # -------------------------------
+                    # TODO: Compute action prediction from BC model
+                    # with torch.no_grad():
+                    a_norm = None  # student to implement
+                    # -------------------------------
 
+                    # -------------------------------
+                    # TODO: Un-normalize action to robot units
+                    action = None  # student to implement
+                    # -------------------------------
+
+                    # 4. Send predicted action to robot
                     arm.set_servo_angle(
-                        angle=(q + action[:7]).tolist(),
+                        angle=(q + action[:7]).tolist(),  # add delta joint angles
                         speed=0.5,
                         wait=True,
                         is_radian=True,
                     )
                     arm.set_gripper_position(action[-1], wait=True, speed=0.1)
 
+                    # 5. Log data for later analysis
                     states.append(state)
                     actions.append(action)
-                    eef_states.append(get_tcp_pose(arm))
+                    eef_states.append(get_tcp_pose(arm))  # record EE pose
 
                 # Convert to NumPy array (shape: N x 6)
                 eef_states_np = np.array(eef_states)  # each element is [x, y, z, roll, pitch, yaw]
