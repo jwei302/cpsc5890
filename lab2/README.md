@@ -65,7 +65,7 @@ First, use a pre-recorded demonstrations to train a BC model.
 
 ```bash
 
-python scripts/bc.py --ip <robot_ip> --mode train
+python scripts/bc.py --mode train --ip <robot_ip> --epochs <epochs> --batch_size <batch_size> --lr <lr>
 ```
 Then, use that trained model to inference on the robot.
 
