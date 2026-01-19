@@ -83,16 +83,10 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 - Observe smoothness, accuracy, and timing relative to the original demonstration
 
 # What to record:
--- Observe robot execution:
-
+1. Observe robot execution:
 * Are the movements smooth?
-
 * Do actions closely follow the demonstration?
-
 * Are there any large deviations, jerks, or unexpected behavior?
-
-- Check model generalization
-
+2. Check model generalization
 * Start the robot from slightly different initial poses
-
 * Observe whether the BC model still produces reasonable behavior
