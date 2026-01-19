@@ -79,21 +79,20 @@ Use the trained BC model to generate actions on the robot:
 
 python scripts/bc.py --ip <robot_ip> --mode inference
 ```
--The robot will replay actions predicted by the BC model
--Observe smoothness, accuracy, and timing relative to the original demonstration
+- The robot will replay actions predicted by the BC model
+- Observe smoothness, accuracy, and timing relative to the original demonstration
 
 # What to record:
+- Observe robot execution:
 
-1. Observe robot execution:
+* Are the movements smooth?
 
---Are the movements smooth?
+* Do actions closely follow the demonstration?
 
-Do actions closely follow the demonstration?
+* Are there any large deviations, jerks, or unexpected behavior?
 
-Are there any large deviations, jerks, or unexpected behavior?
+- Check model generalization
 
-Check model generalization
+* Start the robot from slightly different initial poses
 
-Start the robot from slightly different initial poses
-
-Observe whether the BC model still produces reasonable behavior
+* Observe whether the BC model still produces reasonable behavior
