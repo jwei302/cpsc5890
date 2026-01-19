@@ -1,12 +1,4 @@
-In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
-
-This step is critical for building intuition about:
-
-how demonstrations are represented as data (joint states, EE positions, orientations)
-
-mapping states to actions via a policy
-
-how model predictions compare to actual robot trajectories# Lab 2 — Behavior Cloning (BC) and DAgger
+# Lab 2 — Behavior Cloning (BC) and DAgger
 
 ## Objectives
 - Understand how demonstrations are represented as data
@@ -18,7 +10,6 @@ how model predictions compare to actual robot trajectories# Lab 2 — Behavior C
 - Compare vanilla BC and DAgger approaches
 - Understand evaluation metrics and intervention strategies
 
----
 
 ## Part 1: Understanding Demonstrations
 **Goals**
