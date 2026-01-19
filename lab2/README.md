@@ -61,11 +61,15 @@ Deliverable
 
 In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
 
-# Procedure
-
-Use a pre-recorded demonstrations to train a BC model.
+First, use a pre-recorded demonstrations to train a BC model.
 
 ```bash
 
-python scripts/bc.py --ip <robot_ip>
+python scripts/bc.py --ip <robot_ip> --mode train
+```
+Then, use that trained model to inference on the robot.
+
+```bash
+
+python scripts/bc.py --ip <robot_ip> --mode inference
 ```
