@@ -90,3 +90,19 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 2. Check model generalization
 * Start the robot from slightly different initial poses
 * Observe whether the BC model still produces reasonable behavior
+
+# What to Record and Report
+
+* Training hyperparameters: epochs, batch_size, lr
+* Final training and test loss
+* Visualization of visited EEF states
+* Video of the robot performing the BC-inferred trajectory
+
+# Reflection Questions for Students
+* How closely does the BC model reproduce the original demonstrations?
+* Where does the model fail or deviate most significantly? Why might that happen?
+* How does the choice of obs_horizon affect prediction quality?
+* How does training dataset size or diversity affect generalization?
+* What could go wrong if the robot starts from a pose outside the demonstration distribution?
+* Why is normalization of states and actions important for BC performance?
+* How might you extend this BC model to handle multi-step planning or sequences longer than the observation horizon?
