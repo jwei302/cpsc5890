@@ -47,19 +47,13 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 - The robot will replay actions predicted by the BC model
 - Observe smoothness, accuracy, and timing relative to the original demonstration
 
-### What to record
-1. Observe robot execution:
+### What to Record and Report
 * Are the movements smooth?
 * Do actions closely follow the demonstration?
 * Are there any large deviations, jerks, or unexpected behavior?
-2. Check model generalization
-* Start the robot from slightly different initial poses
-* Observe whether the BC model still produces reasonable behavior
-
-### What to Record and Report
-
+* Start the robot from slightly different initial poses. Observe whether the BC model still produces reasonable behavior
 * Training hyperparameters: epochs, batch_size, lr
-* Final training and test loss
+* Loss over time. Final training and test loss
 * Visualization of visited EEF states
 * Video of the robot performing the BC-inferred trajectory
 * Record a video of success and failures, and caption it explaining when success and failures occur
