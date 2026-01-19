@@ -61,15 +61,39 @@ Deliverable
 
 In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
 
-First, use a pre-recorded demonstrations to train a BC model.
+# Step 1: Train the BC model
+
+Use a pre-recorded demonstration dataset to train a BC model:
 
 ```bash
 
 python scripts/bc.py --mode train --ip <robot_ip> --epochs <epochs> --batch_size <batch_size> --lr <lr>
 ```
-Then, use that trained model to inference on the robot.
+-Experiment with hyperparameters (epochs, batch_size, lr)
+-Observe the training and test loss over epochs
+
+# Step 2: Run inference on the robot
+Use the trained BC model to generate actions on the robot:
 
 ```bash
 
 python scripts/bc.py --ip <robot_ip> --mode inference
 ```
+-The robot will replay actions predicted by the BC model
+-Observe smoothness, accuracy, and timing relative to the original demonstration
+
+# What to record:
+
+1. Observe robot execution:
+
+--Are the movements smooth?
+
+Do actions closely follow the demonstration?
+
+Are there any large deviations, jerks, or unexpected behavior?
+
+Check model generalization
+
+Start the robot from slightly different initial poses
+
+Observe whether the BC model still produces reasonable behavior
