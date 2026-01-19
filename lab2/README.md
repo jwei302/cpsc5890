@@ -62,6 +62,7 @@ python scripts/bc.py --ip <robot_ip> --mode inference
 * Final training and test loss
 * Visualization of visited EEF states
 * Video of the robot performing the BC-inferred trajectory
+* Record a video of success and failures, and caption it explaining when success and failures occur
 
 ### Reflection Questions
 * How closely does the BC model reproduce the original demonstrations?
