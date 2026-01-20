@@ -20,7 +20,7 @@
 
 ## Part 2: Behavior Cloning
 
-**Goals**
+***Goals***
 
 In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
 
