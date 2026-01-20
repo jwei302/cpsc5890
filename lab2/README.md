@@ -20,11 +20,13 @@
 
 ## Part 2: Behavior Cloning
 
-***Goals***
+### Goal
 
-In this part, you will verify that your Behavior Cloning (BC) model produces actions that match the recorded demonstrations.
+In this part, you will train and evaluate a Behavior Cloning (BC) policy that learns to imitate robot behavior from demonstration data. Your objective is to verify that the trained BC model can reproduce actions similar to the recorded demonstrations and to understand its limitations.
 
-**Tasks**
+Behavior Cloning treats imitation learning as a supervised learning problem: given a robot state, the model predicts the action taken by the demonstrator in that state.
+
+### Task
 
 ### Step 1: Train the BC model
 
