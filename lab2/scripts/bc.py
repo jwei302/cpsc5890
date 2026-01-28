@@ -1,47 +1,27 @@
-#!/usr/bin/env python3
-"""
-Behavior Cloning (BC) for xArm
-- Train a delta-joint-angle policy from demonstrations
-- Run inference on the real robot using a sliding observation window
-"""
-
 import os
 import argparse
-from collections import deque
-import matplotlib.pyplot as plt
-
 import numpy as np
 import torch
 import torch.nn as nn
+from collections import deque
 from torch.utils.data import DataLoader, TensorDataset
 
-from xarm_lab.arm_utils import (
-    connect_arm,
-    disconnect_arm,
-    ArmConfig,
-    get_joint_angles,
-    get_tcp_pose,
-    get_gripper_position,
-)
+
+from xarm_lab.arm_utils import connect_arm, disconnect_arm, ArmConfig, get_joint_angles, get_tcp_pose, get_gripper_position
 from xarm_lab.safety import enable_basic_safety, clear_faults
 from xarm_lab.kinematics import ik_from_pose
+from utils.plot import plot_3d_positions
 
-
-# ============================================================
-# Dataset utilities
-# ============================================================
+# -----------------------------
+# Load + flatten dataset
+# -----------------------------
 
 def load_data_by_episode(path, H, test_frac=0.2, seed=0):
-    """
-    Load episodic data and flatten into (X, Y) pairs using
-    a sliding window of length H.
-
-    X: stacked observations  (H * obs_dim)
-    Y: single-step action    (act_dim)
-    """
     data = np.load(path, allow_pickle=True)
-    states = data["states"]     # (E,) object array
-    actions = data["actions"]   # (E,) object array
+
+    states = data["states"]    # (E,) object array
+    actions = data["actions"]  # (E,) object array
+
     assert len(states) == len(actions)
 
     E = len(states)
@@ -52,119 +32,81 @@ def load_data_by_episode(path, H, test_frac=0.2, seed=0):
     test_eps = perm[:n_test]
     train_eps = perm[n_test:]
 
-    def flatten(episode_indices):
+    def flatten(episode_indices, H):
         X, Y = [], []
-        for idx in episode_indices:
-            s = states[idx]     # (T, obs_dim)
-            a = actions[idx]    # (T, act_dim)
-            T = len(s)
+        for i in episode_indices:
+            s = states[i]   # (T, obs_dim)
+            a = actions[i]  # (T, act_dim)
+            # s = states[i][..., :-1]          # (T, 7)  joint angles only
+            # s = angle_to_continuous(q)       # (T, 14)
+            # a = actions[i][..., :-1]  # (T, act_dim)
 
+            T = len(s)
             if T < H:
                 continue
-
             for t in range(H - 1, T):
-                X.append(s[t - H + 1 : t + 1].reshape(-1))
+                X.append(s[t-H+1:t+1].reshape(-1))  # (H*obs_dim,)
                 Y.append(a[t])
-
         return (
             np.asarray(X, dtype=np.float32),
             np.asarray(Y, dtype=np.float32),
         )
 
-    X_train, Y_train = flatten(train_eps)
-    X_test,  Y_test  = flatten(test_eps)
+    X_train, Y_train = flatten(train_eps, H)
+    X_test, Y_test   = flatten(test_eps, H)
 
     return X_train, Y_train, X_test, Y_test
 
-
-# ============================================================
-# TODO: Compute normalization stats
-# ============================================================
 def compute_norm_stats(X, eps=1e-8):
-    """
-    Student TODO:
-    - Compute mean and std along each feature dimension
-    - Make sure std is never smaller than eps to avoid division by zero
-    """
-    # -------------------------------
-    # TODO: implement
-    mean = None  # replace None
-    std  = None  # replace None
-    # -------------------------------
+    mean = X.mean(axis=0)
+    std = X.std(axis=0)
+    std = np.maximum(std, eps)
     return mean, std
-
 
 def normalize(X, mean, std):
     return (X - mean) / std
 
+# -----------------------------
+# BC policy
+# -----------------------------
 
-
-# ============================================================
-# TODO: Policy network skeleton
-# ============================================================
 class BCPolicy(nn.Module):
-    """
-    Student TODO:
-    Implement a simple MLP policy mapping observations to actions
-    Suggested:
-        - Input layer: obs_dim
-        - Hidden layers: 1-2 layers with ReLU
-        - Output layer: act_dim
-    """
     def __init__(self, obs_dim, act_dim):
         super().__init__()
-        # -------------------------------
-        # TODO: define network layers
-        self.net = None
-        # -------------------------------
+        self.net = nn.Sequential(
+            nn.Linear(obs_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, act_dim),
+        )
 
     def forward(self, x):
         return self.net(x)
 
+# -----------------------------
+# Train / eval
+# -----------------------------
 
-# ============================================================
-# Training / evaluation helpers
-# ============================================================
 def evaluate(model, loader, device):
-    """
-    Compute mean squared error (MSE) over a dataset.
-
-    Student TODO:
-    Fill in the loss calculation only. The forward pass is provided.
-    """
     model.eval()
-    mse, n = 0.0, 0
-
+    mse = 0.0
+    n = 0
     with torch.no_grad():
         for x, y in loader:
             x, y = x.to(device), y.to(device)
-
-            # Forward pass (provided)
             pred = model(x)
-
-            # -------------------------------
-            # TODO: Compute batch squared error
-            # Replace the next line with the actual computation
-            batch_mse = None
-            # -------------------------------
-
-            mse += batch_mse
+            mse += torch.sum((pred - y) ** 2).item()
             n += len(x)
-
     return mse / n
-
-
-# ============================================================
-# Main
-# ============================================================
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["train", "inference"], default="train")
     parser.add_argument("--data", default="asset/demo.npz")
-    parser.add_argument("--epochs", type=int)
-    parser.add_argument("--batch-size", type=int)
-    parser.add_argument("--lr", type=float)
+    parser.add_argument("--epochs", type=int, default=1000)
+    parser.add_argument("--batch-size", type=int, default=256)
+    parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--test-frac", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--ip", required=True)
@@ -174,16 +116,12 @@ def main():
     parser.add_argument("--inf_steps", type=int, default=10)
     args = parser.parse_args()
 
-    # --------------------------------------------------------
-    # Reproducibility & device
-    # --------------------------------------------------------
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # --------------------------------------------------------
-    # Load and normalize dataset
-    # --------------------------------------------------------
+    # Load data
     Xtr, Ytr, Xte, Yte = load_data_by_episode(
         args.data,
         H=args.obs_horizon,
@@ -191,42 +129,40 @@ def main():
         seed=args.seed,
     )
 
+    # Normalize using TRAIN statistics only
     X_mean, X_std = compute_norm_stats(Xtr)
     Y_mean, Y_std = compute_norm_stats(Ytr)
 
-    print("X mean/std:", X_mean, X_std)
-    print("Y mean/std:", Y_mean, Y_std)
+    print(X_mean, X_std)
+
+    print(Y_mean, Y_std)
 
     Xtr = normalize(Xtr, X_mean, X_std)
     Xte = normalize(Xte, X_mean, X_std)
+
     Ytr = normalize(Ytr, Y_mean, Y_std)
     Yte = normalize(Yte, Y_mean, Y_std)
 
-    # ========================================================
-    # TRAINING
-    # ========================================================
     if args.mode == "train":
 
-        print(f"Train samples: {len(Xtr)} | Test samples: {len(Xte)}")
+        print(f"Train samples: {len(Xtr)} | Test samples:  {len(Xte)}")
 
-        train_loader = DataLoader(
-            TensorDataset(torch.from_numpy(Xtr), torch.from_numpy(Ytr)),
-            batch_size=args.batch_size,
-            shuffle=True,
+        train_ds = TensorDataset(
+            torch.from_numpy(Xtr), torch.from_numpy(Ytr)
         )
-        test_loader = DataLoader(
-            TensorDataset(torch.from_numpy(Xte), torch.from_numpy(Yte)),
-            batch_size=args.batch_size,
+        test_ds = TensorDataset(
+            torch.from_numpy(Xte), torch.from_numpy(Yte)
         )
 
-        model = BCPolicy(Xtr.shape[1], Ytr.shape[1]).to(device)
+        train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
+        test_loader = DataLoader(test_ds, batch_size=args.batch_size)
+
+        # Model
+        model = BCPolicy(obs_dim=Xtr.shape[1], act_dim=Ytr.shape[1]).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         loss_fn = nn.MSELoss()
 
-        # Track loss over epochs
-        train_losses = []
-        test_losses = []
-
+        # Train
         for ep in range(1, args.epochs + 1):
             model.train()
             for x, y in train_loader:
@@ -239,51 +175,41 @@ def main():
                 loss.backward()
                 optimizer.step()
 
-            # Evaluate at the end of the epoch
-            train_mse = evaluate(model, train_loader, device)
-            test_mse = evaluate(model, test_loader, device)
-
-            train_losses.append(train_mse)
-            test_losses.append(test_mse)
-
             if ep % 5 == 0 or ep == 1:
+                train_mse = evaluate(model, train_loader, device)
+                test_mse = evaluate(model, test_loader, device)
                 print(
                     f"Epoch {ep:03d} | "
                     f"Train MSE: {train_mse:.6f} | "
                     f"Test MSE: {test_mse:.6f}"
                 )
 
-        # Save artifacts
-        torch.save(model.state_dict(), "asset/bc_policy.pt")
-        np.savez(
-            "asset/bc_norm.npz",
-            X_mean=X_mean, X_std=X_std,
-            Y_mean=Y_mean, Y_std=Y_std,
+        # Save model
+        torch.save(
+            model.state_dict(),
+            os.path.join("asset", "bc_policy.pt")
         )
 
-        # ---------------- Plot training/test loss ----------------
-        plt.figure(figsize=(8,5))
-        plt.plot(range(1, args.epochs+1), train_losses, label="Train MSE")
-        plt.plot(range(1, args.epochs+1), test_losses, label="Test MSE")
-        plt.xlabel("Epoch")
-        plt.ylabel("MSE")
-        plt.title("Behavior Cloning Loss")
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.show()
+        # Save normalization stats
+        np.savez(
+            os.path.join("asset", "bc_norm.npz"),
+            X_mean=X_mean,
+            X_std=X_std,
+            Y_mean=Y_mean,
+            Y_std=Y_std,
+        )
 
         print("Model and normalization saved.")
 
-    # ========================================================
-    # INFERENCE
-    # ========================================================
-    else:
-        model = BCPolicy(Xtr.shape[1], Ytr.shape[1]).to(device)
-        model.load_state_dict(torch.load("asset/bc_policy.pt", map_location=device))
+    elif args.mode == "inference":
+
+        # Load model
+        model = BCPolicy(obs_dim=Xtr.shape[1], act_dim=Ytr.shape[1]).to(device)
+        model.load_state_dict(torch.load(os.path.join("asset", "bc_policy.pt"), map_location=device))
         model.eval()
 
-        norm = np.load("asset/bc_norm.npz")
+        # Load normalization
+        norm = np.load(os.path.join("asset", "bc_norm.npz"))
         X_mean, X_std = norm["X_mean"], norm["X_std"]
         Y_mean, Y_std = norm["Y_mean"], norm["Y_std"]
 
@@ -296,100 +222,95 @@ def main():
             clear_faults(arm)
             enable_basic_safety(arm)
 
-            arm.set_gripper_mode(0)
-            arm.set_gripper_enable(True)
-            arm.set_gripper_speed(5000)
+            code = arm.set_gripper_mode(0)
+            code = arm.set_gripper_enable(True)
+            code = arm.set_gripper_speed(5000)
 
-            print("\n=== BC Inference on Robot ===")
+            print("\n=== Pick-and-Place Demonstration (IK → Δq) ===")
 
             for ep in range(args.episodes):
-                # Home robot
-                _, init_joints = arm.get_initial_point()
-                arm.set_servo_angle(angle=init_joints, speed=20.0, wait=True, is_radian=False)
 
-                # Randomized initial pose
+                code, initial_joints = arm.get_initial_point()
+                arm.set_servo_angle(
+                    angle=initial_joints,
+                    speed=20.0,
+                    wait=True,
+                    is_radian=False
+                )
                 pose = get_tcp_pose(arm)
                 pose[:3] += np.random.uniform(-5, 5, size=3)
-                joints = ik_from_pose(arm, pose)
-
-                arm.set_servo_angle(angle=joints, speed=20.0, wait=True, is_radian=True)
+                joint_angles = ik_from_pose(arm, pose)
+                arm.set_servo_angle(
+                    angle=joint_angles,
+                    speed=20.0,
+                    wait=True,
+                    is_radian=True
+                )
                 arm.set_gripper_position(600, wait=True, speed=0.1)
 
-                print(f"Episode {ep + 1}: start pose {pose}")
+                print(f"Episode {ep+1}: robot homed to {np.asarray(pose, dtype=float)}")
+
+                states = []
+                actions = []
+                eefs = []
 
                 obs_buffer = deque(maxlen=args.obs_horizon)
-                states, eef_states, actions = [], [], []
 
-                # === Robot BC execution loop (safety-limited horizon) ===
-                for _ in range(args.inf_steps):  # limit number of steps for safety
-                    # 1. Get current robot state
-                    q = get_joint_angles(arm)         # current joint angles
-                    g = get_gripper_position(arm)     # current gripper position
-                    state = np.concatenate([q, [g]])  # full observation vector
+                for t in range(args.inf_steps):  # fixed horizon (safety)
 
-                    # 2. Append to observation buffer (sliding window)
+                    # ---- Read state ----
+                    q = get_joint_angles(arm)              # (7,)
+                    # state = angle_to_continuous(q)         # (14,)
+                    g = get_gripper_position(arm)  # scalar
+                    state = np.concatenate([q, [g]])  # (8,)
+                    eef_state = get_tcp_pose(arm)
+                    # state = np.concatenate([q])  # (8,)
+
                     obs_buffer.append(state)
+
                     if len(obs_buffer) < args.obs_horizon:
-                        continue  # wait until we have enough history
+                        continue   # wait until buffer is full
 
-                    # 3. Stack observations into a single vector for the model
-                    obs = np.concatenate(obs_buffer)
+                    obs_stack = np.concatenate(list(obs_buffer), axis=0)  # (H*8,)
 
-                    # -------------------------------
-                    # TODO: Normalize observation
-                    x = None  # student to implement normalization
-                    # -------------------------------
+                    x = (obs_stack - X_mean) / X_std
+                    x = torch.tensor(x, dtype=torch.float32).to(device)
 
-                    # -------------------------------
-                    # TODO: Compute action prediction from BC model
-                    # with torch.no_grad():
-                    a_norm = None  # student to implement
-                    # -------------------------------
+                    # ---- Predict action ----
+                    with torch.no_grad():
+                        a_norm = model(x).cpu().numpy()
 
-                    # -------------------------------
-                    # TODO: Un-normalize action to robot units
-                    action = None  # student to implement
-                    # -------------------------------
+                    # ---- Unnormalize ----
+                    action = a_norm * Y_std + Y_mean
 
-                    # 4. Send predicted action to robot
+                    dq = action[:7]
+                    dg = int(action[7] >= 0.5)
+
+                    # ---- Execute ----
                     arm.set_servo_angle(
-                        angle=(q + action[:7]).tolist(),  # add delta joint angles
+                        angle=(q + dq).tolist(),
                         speed=0.5,
                         wait=True,
                         is_radian=True,
                     )
+
                     arm.set_gripper_position(action[-1], wait=True, speed=0.1)
 
-                    # 5. Log data for later analysis
                     states.append(state)
                     actions.append(action)
-                    eef_states.append(get_tcp_pose(arm))  # record EE pose
+                    eefs.append(eef_state)
 
-                # Convert to NumPy array (shape: N x 6)
-                eef_states_np = np.array(eef_states)  # each element is [x, y, z, roll, pitch, yaw]
+                ep_states_list.append(np.asarray(states, dtype=np.float32))
+                ep_actions_list.append(np.asarray(actions, dtype=np.float32))
 
-                # Extract first 3 axes: x, y, z
-                eef_xyz = eef_states_np[:, :3]
-
-                # Optional: 3D scatter plot
-                fig = plt.figure(figsize=(7,7))
-                ax = fig.add_subplot(111, projection='3d')
-                ax.scatter(eef_xyz[:, 0], eef_xyz[:, 1], eef_xyz[:, 2], c=np.arange(len(eef_xyz)), cmap='viridis')
-                ax.set_xlabel("X")
-                ax.set_ylabel("Y")
-                ax.set_zlabel("Z")
-                ax.set_title("EEF Position in 3D")
-                plt.show()
-
-                ep_states_list.append(np.asarray(states, np.float32))
-                ep_actions_list.append(np.asarray(actions, np.float32))
+                plot_3d_positions(np.array(eefs)[:,:3])
 
             np.savez(
                 args.out,
-                states=np.array(ep_states_list, dtype=object),
-                actions=np.array(ep_actions_list, dtype=object),
+                states=np.array(ep_states_list, dtype=object),   # (E,) each item (Ti,7)
+                actions=np.array(ep_actions_list, dtype=object), # (E,) each item (Ti,8)
                 action_type="delta_joint_angles",
-                unit="radians",
+                unit="radians"
             )
 
             print(f"\nDataset saved to {args.out}")
