@@ -20,68 +20,104 @@ def policy(
     hover_height=100,
 ):
     """
-    One-shot FSM pick-and-place controller.
-    Each stage is visited exactly once.
-    No interpolation: each stage outputs a single target.
+    Open-loop FSM pick-and-place controller.
+    - Streaming (wait=False)
+    - Proportional joint-space control
+    - Error-tolerant state transitions
     """
+
+    # ---------------- parameters ----------------
+    Kp = 0.2            # proportional gain
+    dq_max = 0.05       # rad / step clamp
+    q_tol = 5        # rad ≈ 1 deg
+    grip_hold_time = 1.0  # seconds
 
     # ---------------- persistent FSM state ----------------
     if not hasattr(policy, "stage"):
         policy.stage = "PICK_HOVER"
+        policy.stage_t0 = None
 
     # ---------------- read state ----------------
-    q = np.array(get_joint_angles(arm), float)
-    pose = np.array(get_tcp_pose(arm), float)
+    q = np.array(get_joint_angles(arm), dtype=float)
+    pose = np.array(get_tcp_pose(arm), dtype=float)
+    gripper_pos = np.array(get_gripper_position(arm), dtype=float)
 
     # ---------------- waypoints ----------------
-    pick_hover  = np.array(pick_pose, float);  pick_hover[2]  += hover_height
-    pick_down   = np.array(pick_pose, float)
+    pick_hover  = np.array(pick_pose, dtype=float)
+    pick_hover[2] += hover_height
+    pick_down = np.array(pick_pose, dtype=float)
 
-    place_hover = np.array(place_pose, float); place_hover[2] += hover_height
-    place_down  = np.array(place_pose, float)
+    place_hover = np.array(place_pose, dtype=float)
+    place_hover[2] += hover_height
+    place_down = np.array(place_pose, dtype=float)
+
+    # ---------------- helpers ----------------
+    def joint_step_to(target_pose):
+        q_target = np.array(ik_from_pose(arm, target_pose.tolist()), dtype=float)
+        err = _angle_wrap_pi(q_target - q)
+        dq = Kp * err
+        dq = np.clip(dq, -dq_max, dq_max)
+        return dq, np.linalg.norm(err)
 
     # ---------------- FSM logic ----------------
+
+    # ---- PICK HOVER ----
     if policy.stage == "PICK_HOVER":
-        target_pose = pick_hover
-        gripper_cmd = 600
-        policy.stage = "PICK_DOWN"
+        dq, err = joint_step_to(pick_hover)
+        if np.linalg.norm(pose[:3] - pick_hover[:3]) < q_tol:
+            policy.stage = "PICK_DOWN"
+        return np.hstack([dq, 600]), False
 
-    elif policy.stage == "PICK_DOWN":
-        target_pose = pick_down
-        gripper_cmd = 600
-        policy.stage = "GRASP"
+    # ---- PICK DOWN ----
+    if policy.stage == "PICK_DOWN":
+        dq, err = joint_step_to(pick_down)
+        if np.linalg.norm(pose[:3] - pick_down[:3]) < q_tol:
+            policy.stage = "GRASP"
+            policy.stage_t0 = time.time()
+        return np.hstack([dq, 600]), False
 
-    elif policy.stage == "GRASP":
-        # close gripper, no motion
-        policy.stage = "PLACE_HOVER"
+
+    # ---- GRASP ----
+    if policy.stage == "GRASP":
+        if time.time() - policy.stage_t0 >= grip_hold_time:
+            policy.stage = "PICK_UP"
         return np.hstack([np.zeros(7), 300]), False
+    
+    # ---- PICK UP ----
+    if policy.stage == "PICK_UP":
+        dq, err = joint_step_to(pick_hover)
+        if np.linalg.norm(pose[:3] - pick_hover[:3]) < q_tol:
+            policy.stage = "PLACE_HOVER"
+            policy.stage_t0 = time.time()
+        return np.hstack([dq, 300]), False
 
-    elif policy.stage == "PLACE_HOVER":
-        target_pose = place_hover
-        gripper_cmd = 300
-        policy.stage = "PLACE_DOWN"
+    # ---- PLACE HOVER ----
+    if policy.stage == "PLACE_HOVER":
+        dq, err = joint_step_to(place_hover)
+        if np.linalg.norm(pose[:3] - place_hover[:3]) < q_tol:
+            policy.stage = "PLACE_DOWN"
+        return np.hstack([dq, 300]), False
 
-    elif policy.stage == "PLACE_DOWN":
-        target_pose = place_down
-        gripper_cmd = 300
-        policy.stage = "RELEASE"
+    # ---- PLACE DOWN ----
+    if policy.stage == "PLACE_DOWN":
+        dq, err = joint_step_to(place_down)
+        if np.linalg.norm(pose[:3] - place_down[:3]) < q_tol:
+            policy.stage = "RELEASE"
+            policy.stage_t0 = time.time()
+        return np.hstack([dq, 300]), False
 
-    elif policy.stage == "RELEASE":
-        # open gripper, no motion
-        return np.hstack([np.zeros(7), 600]), True
-
-    # ---------------- IK → joint delta ----------------
-    q_next = np.array(ik_from_pose(arm, target_pose.tolist()), float)
-    dq = _angle_wrap_pi(q_next - q)
-
-    return np.hstack([dq, gripper_cmd]), False
+    # ---- RELEASE ----
+    if policy.stage == "RELEASE":
+        if time.time() - policy.stage_t0 >= grip_hold_time:
+            return np.hstack([np.zeros(7), 600]), True
+        return np.hstack([np.zeros(7), 600]), False
 
 
 def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--ip", required=True)
-    ap.add_argument("--out", default="asset/demo.npz")
+    ap.add_argument("--out", default="asset/demo_high_freq.npz")
     ap.add_argument("--episodes", type=int, default=10)
     args = ap.parse_args()
 
@@ -142,10 +178,10 @@ def main():
                 arm.set_servo_angle(
                     angle=(action[:7] + current_joint).tolist(),
                     speed=0.5,
-                    wait=True,
+                    wait=False,
                     is_radian=True
                 )
-                arm.set_gripper_position(action[-1], wait=True, speed=0.1)
+                arm.set_gripper_position(action[-1], wait=False, speed=0.1)
 
                 # Record transition: [q1..q7, gripper]
                 state = np.concatenate([current_joint, [current_gripper_pos]])
