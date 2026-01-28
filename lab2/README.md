@@ -30,7 +30,7 @@ Behavior Cloning treats imitation learning as a supervised learning problem: giv
 
 ### Step 1: Train the BC model
 
-Use a pre-recorded demonstration dataset to train a BC model:
+Use a pre-recorded demonstration dataset ```asset/demo.npz``` to train a BC model:
 
 ```bash
 
