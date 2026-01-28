@@ -171,6 +171,7 @@ def main():
     parser.add_argument("--out", default="asset/inf.npz")
     parser.add_argument("--episodes", type=int, default=10)
     parser.add_argument("--obs_horizon", type=int, default=1)
+    parser.add_argument("--inf_steps", type=int, default=10)
     args = parser.parse_args()
 
     # --------------------------------------------------------
@@ -320,7 +321,7 @@ def main():
                 states, eef_states, actions = [], [], []
 
                 # === Robot BC execution loop (safety-limited horizon) ===
-                for _ in range(7):  # limit number of steps for safety
+                for _ in range(args.inf_steps):  # limit number of steps for safety
                     # 1. Get current robot state
                     q = get_joint_angles(arm)         # current joint angles
                     g = get_gripper_position(arm)     # current gripper position
