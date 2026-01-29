@@ -56,7 +56,7 @@ Use a pre-recorded demonstration dataset ```asset/demo.npz``` to train a BC mode
 
 ```bash
 
-python scripts/bc.py --mode train --ip <robot_ip> --epochs <epochs> --batch_size <batch_size> --lr <lr>
+python -m scripts.bc --mode train --ip <robot_ip> --epochs <epochs> --batch_size <batch_size> --lr <lr>
 ```
 -Experiment with hyperparameters (epochs, batch_size, lr)
 -Observe the training and test loss over epochs
@@ -66,7 +66,7 @@ Use the trained BC model to generate actions on the robot:
 
 ```bash
 
-python scripts/bc.py --ip <robot_ip> --mode inference
+python -m scripts.bc --ip <robot_ip> --mode inference
 ```
 - The robot will replay actions predicted by the BC model
 - Observe smoothness, accuracy, and timing relative to the original demonstration
@@ -78,7 +78,7 @@ Repeat Step 1 and 2 using ```asset/demo_high_freq.npz``` instead,
 Train the BC model using the high-frequency dataset:
 
 ```bash
-python scripts/bc.py --mode train --ip <robot_ip> \
+python -m scripts.bc --mode train --ip <robot_ip> \
     --data asset/demo_high_freq.npz \
     --epochs <epochs> --batch_size <batch_size> --lr <lr>
 ```
@@ -92,7 +92,7 @@ Compare convergence behavior against the low-frequency dataset.
 Run inference using the BC model trained on high-frequency data. Be sure to turn off ```wait=False``` in ```set_servo_angle``` (line 355) and ```set_gripper_position``` (line 361) to allow high frequency control.
 
 ```bash
-python scripts/bc.py --mode inference --ip <robot_ip>
+python -m scripts.bc --mode inference --ip <robot_ip>
 ```
 Observe the resulting robot motion.
 
@@ -110,7 +110,6 @@ Record the EEF state trajectory using provided visualization code.
 * Training hyperparameters: epochs, batch_size, lr
 * Loss over time. Final training and test loss
 * Visualization of visited EEF states
-* Video of the robot performing the BC-inferred trajectory
 * Record a video of success and failures, and caption it explaining when success and failures occur
 
 ### Reflection Questions
