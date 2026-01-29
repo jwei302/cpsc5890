@@ -15,7 +15,7 @@
 
 ### Step 1: Demonstrations
 
-To understand how demonstrations are represented, we first load and inspect the recorded dataset stored in .npz format (e.g., asset/demo.npz). This step is critical for verifying data integrity, dimensionality, and consistency before training Behavior Cloning (BC) or DAgger policies.
+To understand how demonstrations are represented, we first load and inspect the recorded dataset stored in .npz format (e.g., ```asset/demo.npz```). This step is critical for verifying data integrity, dimensionality, and consistency before training Behavior Cloning (BC) or DAgger policies.
 ```bash
 
 python scripts/data.py
@@ -24,6 +24,21 @@ We then print all keys, their shapes, and episode-level statistics to understand
 
 ### Step 2: Understanding Policy
 
+In this step, you will implement and run a simple hand-coded policy to better understand how robot actions are generated and executed before learning-based methods (BC and DAgger). The goal is not to solve the task optimally, but to build intuition for:
+How a policy maps the current robot state to an action
+
+How actions are represented as delta joint commands
+
+How repeated policy execution produces trajectories over time
+
+A policy is a function that maps observations (robot state) to actions. In this lab, actions are represented as. 7 joint angle deltas (in radians). 1 gripper command. At every control step, the policy outputs an action, which is then applied to the robot.
+#### Your Task
+Implement a simple deterministic policy inside ```policy()``` that generates predictable motion.
+
+The policy is implemented in:
+```bash
+python scripts/policy.py --ip <robot_ip>
+```
 
 ## Part 2: Behavior Cloning
 
