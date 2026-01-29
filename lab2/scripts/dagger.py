@@ -174,12 +174,6 @@ def rollout_dagger_collect(
             #
             # Then choose:
             #   action_exec = a_exp if rng < beta else a_learned
-            #
-            # Finally execute:
-            #   dq = action_exec[:7]
-            #   arm.set_servo_angle(angle=(q + dq).tolist(), ...)
-            #   if len(action_exec) >= 8: arm.set_gripper_position(...)
-            action_exec = None  # TODO
             raise NotImplementedError
 
             # --- execute (skeleton kept, students fill action_exec + dq) ---
