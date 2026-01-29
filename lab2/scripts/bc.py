@@ -56,48 +56,78 @@ def load_data_by_episode(path, H, test_frac=0.2, seed=0):
     X_test, Y_test   = flatten(test_eps, H)
 
     return X_train, Y_train, X_test, Y_test
-
+    
+# ============================================================
+# TODO: Compute normalization stats
+# ============================================================
 def compute_norm_stats(X, eps=1e-8):
-    mean = X.mean(axis=0)
-    std = X.std(axis=0)
-    std = np.maximum(std, eps)
+    """
+    Student TODO:
+    - Compute mean and std along each feature dimension
+    - Make sure std is never smaller than eps to avoid division by zero
+    """
+    # -------------------------------
+    # TODO: implement
+    mean = None  # replace None
+    std  = None  # replace None
+    # -------------------------------
     return mean, std
+
 
 def normalize(X, mean, std):
     return (X - mean) / std
 
-# -----------------------------
-# BC policy
-# -----------------------------
-
+# ============================================================
+# TODO: Policy network skeleton
+# ============================================================
 class BCPolicy(nn.Module):
+    """
+    Student TODO:
+    Implement a simple MLP policy mapping observations to actions
+    Suggested:
+        - Input layer: obs_dim
+        - Hidden layers: 1-2 layers with ReLU
+        - Output layer: act_dim
+    """
     def __init__(self, obs_dim, act_dim):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(obs_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, act_dim),
-        )
+        # -------------------------------
+        # TODO: define network layers
+        self.net = None
+        # -------------------------------
 
     def forward(self, x):
         return self.net(x)
 
-# -----------------------------
-# Train / eval
-# -----------------------------
-
+# ============================================================
+# Training / evaluation helpers
+# ============================================================
 def evaluate(model, loader, device):
+    """
+    Compute mean squared error (MSE) over a dataset.
+
+    Student TODO:
+    Fill in the loss calculation only. The forward pass is provided.
+    """
     model.eval()
-    mse = 0.0
-    n = 0
+    mse, n = 0.0, 0
+
     with torch.no_grad():
         for x, y in loader:
             x, y = x.to(device), y.to(device)
+
+            # Forward pass (provided)
             pred = model(x)
-            mse += torch.sum((pred - y) ** 2).item()
+
+            # -------------------------------
+            # TODO: Compute batch squared error
+            # Replace the next line with the actual computation
+            batch_mse = None
+            # -------------------------------
+
+            mse += batch_mse
             n += len(x)
+
     return mse / n
 
 def main():
@@ -273,18 +303,21 @@ def main():
 
                     obs_stack = np.concatenate(list(obs_buffer), axis=0)  # (H*8,)
 
-                    x = (obs_stack - X_mean) / X_std
-                    x = torch.tensor(x, dtype=torch.float32).to(device)
+                    # -------------------------------
+                    # TODO: Normalize observation
+                    x = None  # student to implement normalization
+                    # -------------------------------
 
-                    # ---- Predict action ----
-                    with torch.no_grad():
-                        a_norm = model(x).cpu().numpy()
+                    # -------------------------------
+                    # TODO: Compute action prediction from BC model
+                    # with torch.no_grad():
+                    a_norm = None  # student to implement
+                    # -------------------------------
 
-                    # ---- Unnormalize ----
-                    action = a_norm * Y_std + Y_mean
-
-                    dq = action[:7]
-                    dg = int(action[7] >= 0.5)
+                    # -------------------------------
+                    # TODO: Un-normalize action to robot units
+                    action = None  # student to implement
+                    # -------------------------------
 
                     # ---- Execute ----
                     arm.set_servo_angle(
