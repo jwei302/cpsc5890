@@ -12,7 +12,17 @@
 
 
 ## Part 1: Understanding Demonstrations
-Skip
+
+### Step 1: Demonstrations
+
+To understand how demonstrations are represented, we first load and inspect the recorded dataset stored in .npz format (e.g., asset/demo.npz). This step is critical for verifying data integrity, dimensionality, and consistency before training Behavior Cloning (BC) or DAgger policies.
+```bash
+
+python scripts/data.py
+```
+We then print all keys, their shapes, and episode-level statistics to understand the structure of the data. Feel free to add code print the data to inspect further.
+
+### Step 2: Understanding Policy
 
 
 ## Part 2: Behavior Cloning
