@@ -1,3 +1,14 @@
+"""
+Behavior Cloning (Student Version)
+
+Students will fill in:
+- dataset flattening (history stacking)
+- normalization utilities
+- model forward pass
+- training step (loss/optimizer)
+- inference: read state, build history, normalize input, predict, unnormalize, execute
+"""
+
 import os
 import argparse
 import numpy as np
@@ -6,8 +17,10 @@ import torch.nn as nn
 from collections import deque
 from torch.utils.data import DataLoader, TensorDataset
 
-
-from xarm_lab.arm_utils import connect_arm, disconnect_arm, ArmConfig, get_joint_angles, get_tcp_pose, get_gripper_position
+from xarm_lab.arm_utils import (
+    connect_arm, disconnect_arm, ArmConfig,
+    get_joint_angles, get_tcp_pose, get_gripper_position
+)
 from xarm_lab.safety import enable_basic_safety, clear_faults
 from xarm_lab.kinematics import ik_from_pose
 from utils.plot import plot_3d_positions
@@ -17,6 +30,17 @@ from utils.plot import plot_3d_positions
 # -----------------------------
 
 def load_data_by_episode(path, H, test_frac=0.2, seed=0):
+    """
+    Loads an episode-structured dataset (.npz) and flattens it into supervised samples.
+
+    Expected .npz format:
+      - states:  (E,) object array, each item is (T, obs_dim)
+      - actions: (E,) object array, each item is (T, act_dim)
+
+    We create training pairs:
+      x_t = concat([s_{t-H+1}, ..., s_t])   -> shape (H*obs_dim,)
+      y_t = a_t                            -> shape (act_dim,)
+    """
     data = np.load(path, allow_pickle=True)
 
     states = data["states"]    # (E,) object array
@@ -33,20 +57,19 @@ def load_data_by_episode(path, H, test_frac=0.2, seed=0):
     train_eps = perm[n_test:]
 
     def flatten(episode_indices, H):
+        """
+        TODO:
+        - iterate over selected episodes
+        - for each episode, for each time t >= H-1:
+            X.append( s[t-H+1 : t+1].reshape(-1) )
+            Y.append( a[t] )
+        - skip episodes with T < H
+        - return X, Y as float32 numpy arrays
+        """
         X, Y = [], []
-        for i in episode_indices:
-            s = states[i]   # (T, obs_dim)
-            a = actions[i]  # (T, act_dim)
-            # s = states[i][..., :-1]          # (T, 7)  joint angles only
-            # s = angle_to_continuous(q)       # (T, 14)
-            # a = actions[i][..., :-1]  # (T, act_dim)
 
-            T = len(s)
-            if T < H:
-                continue
-            for t in range(H - 1, T):
-                X.append(s[t-H+1:t+1].reshape(-1))  # (H*obs_dim,)
-                Y.append(a[t])
+        # TODO: implement episode flattening with horizon H
+
         return (
             np.asarray(X, dtype=np.float32),
             np.asarray(Y, dtype=np.float32),
@@ -62,24 +85,27 @@ def load_data_by_episode(path, H, test_frac=0.2, seed=0):
 # ============================================================
 def compute_norm_stats(X, eps=1e-8):
     """
-    Student TODO:
-    - Compute mean and std along each feature dimension
-    - Make sure std is never smaller than eps to avoid division by zero
+    TODO:
+    - compute mean and std over axis 0
+    - clamp std with eps to avoid divide-by-zero
+    - return (mean, std)
     """
-    # -------------------------------
-    # TODO: implement
-    mean = None  # replace None
-    std  = None  # replace None
-    # -------------------------------
-    return mean, std
+    # TODO
+    raise NotImplementedError
 
 
 def normalize(X, mean, std):
-    return (X - mean) / std
+    """
+    TODO:
+    - return normalized X
+    """
+    # TODO
+    raise NotImplementedError
 
-# ============================================================
-# TODO: Policy network skeleton
-# ============================================================
+# -----------------------------
+# BC policy
+# -----------------------------
+
 class BCPolicy(nn.Module):
     """
     Student TODO:
@@ -97,11 +123,17 @@ class BCPolicy(nn.Module):
         # -------------------------------
 
     def forward(self, x):
-        return self.net(x)
+        """
+        TODO (optional):
+        - return self.net(x)
+        """
+        # TODO
+        raise NotImplementedError
 
-# ============================================================
-# Training / evaluation helpers
-# ============================================================
+# -----------------------------
+# Train / eval
+# -----------------------------
+
 def evaluate(model, loader, device):
     """
     Compute mean squared error (MSE) over a dataset.
@@ -116,17 +148,13 @@ def evaluate(model, loader, device):
         for x, y in loader:
             x, y = x.to(device), y.to(device)
 
-            # Forward pass (provided)
-            pred = model(x)
+            # TODO: forward pass
+            pred = None  # TODO
 
-            # -------------------------------
-            # TODO: Compute batch squared error
-            # Replace the next line with the actual computation
-            batch_mse = None
-            # -------------------------------
-
-            mse += batch_mse
-            n += len(x)
+            # TODO: accumulate sum of squared error
+            # mse += ...
+            # n += ...
+            raise NotImplementedError
 
     return mse / n
 
@@ -160,18 +188,14 @@ def main():
     )
 
     # Normalize using TRAIN statistics only
-    X_mean, X_std = compute_norm_stats(Xtr)
-    Y_mean, Y_std = compute_norm_stats(Ytr)
+    # TODO: compute (X_mean, X_std) from Xtr
+    # TODO: compute (Y_mean, Y_std) from Ytr
+    X_mean, X_std = None, None  # TODO
+    Y_mean, Y_std = None, None  # TODO
 
-    print(X_mean, X_std)
-
-    print(Y_mean, Y_std)
-
-    Xtr = normalize(Xtr, X_mean, X_std)
-    Xte = normalize(Xte, X_mean, X_std)
-
-    Ytr = normalize(Ytr, Y_mean, Y_std)
-    Yte = normalize(Yte, Y_mean, Y_std)
+    # TODO: normalize Xtr and Xte using X_mean/X_std
+    # TODO: normalize Ytr and Yte using Y_mean/Y_std
+    raise NotImplementedError
 
     if args.mode == "train":
 
@@ -198,12 +222,11 @@ def main():
             for x, y in train_loader:
                 x, y = x.to(device), y.to(device)
 
-                pred = model(x)
-                loss = loss_fn(pred, y)
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                # TODO:
+                # - forward: pred = model(x)
+                # - loss = loss_fn(pred, y)
+                # - optimizer step: zero_grad(), backward(), step()
+                raise NotImplementedError
 
             if ep % 5 == 0 or ep == 1:
                 train_mse = evaluate(model, train_loader, device)
@@ -215,19 +238,12 @@ def main():
                 )
 
         # Save model
-        torch.save(
-            model.state_dict(),
-            os.path.join("asset", "bc_policy.pt")
-        )
+        # TODO: save model weights to asset/bc_policy.pt
+        raise NotImplementedError
 
         # Save normalization stats
-        np.savez(
-            os.path.join("asset", "bc_norm.npz"),
-            X_mean=X_mean,
-            X_std=X_std,
-            Y_mean=Y_mean,
-            Y_std=Y_std,
-        )
+        # TODO: save X_mean, X_std, Y_mean, Y_std to asset/bc_norm.npz
+        raise NotImplementedError
 
         print("Model and normalization saved.")
 
@@ -235,13 +251,15 @@ def main():
 
         # Load model
         model = BCPolicy(obs_dim=Xtr.shape[1], act_dim=Ytr.shape[1]).to(device)
-        model.load_state_dict(torch.load(os.path.join("asset", "bc_policy.pt"), map_location=device))
+
+        # TODO: load weights from asset/bc_policy.pt
+        raise NotImplementedError
+
         model.eval()
 
         # Load normalization
-        norm = np.load(os.path.join("asset", "bc_norm.npz"))
-        X_mean, X_std = norm["X_mean"], norm["X_std"]
-        Y_mean, Y_std = norm["Y_mean"], norm["Y_std"]
+        # TODO: load bc_norm.npz and set X_mean, X_std, Y_mean, Y_std
+        raise NotImplementedError
 
         arm = connect_arm(ArmConfig(ip=args.ip))
 
@@ -252,14 +270,16 @@ def main():
             clear_faults(arm)
             enable_basic_safety(arm)
 
-            code = arm.set_gripper_mode(0)
-            code = arm.set_gripper_enable(True)
-            code = arm.set_gripper_speed(5000)
+            # Gripper setup (kept as-is for safety/consistency)
+            arm.set_gripper_mode(0)
+            arm.set_gripper_enable(True)
+            arm.set_gripper_speed(5000)
 
-            print("\n=== Pick-and-Place Demonstration (IK → Δq) ===")
+            print("\n=== Pick-and-Place (BC Inference) ===")
 
             for ep in range(args.episodes):
 
+                # Home / randomize start (kept as-is)
                 code, initial_joints = arm.get_initial_point()
                 arm.set_servo_angle(
                     angle=initial_joints,
@@ -289,45 +309,44 @@ def main():
                 for t in range(args.inf_steps):  # fixed horizon (safety)
 
                     # ---- Read state ----
-                    q = get_joint_angles(arm)              # (7,)
-                    # state = angle_to_continuous(q)         # (14,)
-                    g = get_gripper_position(arm)  # scalar
-                    state = np.concatenate([q, [g]])  # (8,)
-                    eef_state = get_tcp_pose(arm)
-                    # state = np.concatenate([q])  # (8,)
+                    # TODO:
+                    # - q = get_joint_angles(arm)
+                    # - g = get_gripper_position(arm)
+                    # - state = np.concatenate([q, [g]])  (or whatever your obs definition is)
+                    # - eef_state = get_tcp_pose(arm)
+                    q = None          # TODO
+                    g = None          # TODO
+                    state = None      # TODO
+                    eef_state = None  # TODO
 
-                    obs_buffer.append(state)
+                    # TODO: obs_buffer.append(state)
+                    # TODO: if len(obs_buffer) < obs_horizon: continue
+                    raise NotImplementedError
 
-                    if len(obs_buffer) < args.obs_horizon:
-                        continue   # wait until buffer is full
+                    # ---- Stack + normalize ----
+                    # TODO:
+                    # - obs_stack = np.concatenate(list(obs_buffer), axis=0)
+                    # - x = (obs_stack - X_mean) / X_std
+                    # - x = torch.tensor(x, dtype=torch.float32).to(device)
+                    raise NotImplementedError
 
-                    obs_stack = np.concatenate(list(obs_buffer), axis=0)  # (H*8,)
-
-                    # -------------------------------
-                    # TODO: Normalize observation
-                    x = None  # student to implement normalization
-                    # -------------------------------
-
-                    # -------------------------------
-                    # TODO: Compute action prediction from BC model
+                    # ---- Predict ----
+                    # TODO:
                     # with torch.no_grad():
-                    a_norm = None  # student to implement
-                    # -------------------------------
+                    #   a_norm = model(x).cpu().numpy()
+                    raise NotImplementedError
 
-                    # -------------------------------
-                    # TODO: Un-normalize action to robot units
-                    action = None  # student to implement
-                    # -------------------------------
+                    # ---- Unnormalize ----
+                    # TODO:
+                    # action = a_norm * Y_std + Y_mean
+                    # dq = action[:7]
+                    # dg = ...
+                    raise NotImplementedError
 
                     # ---- Execute ----
-                    arm.set_servo_angle(
-                        angle=(q + dq).tolist(),
-                        speed=0.5,
-                        wait=True,
-                        is_radian=True,
-                    )
-
-                    arm.set_gripper_position(action[-1], wait=True, speed=0.1)
+                    # TODO:
+                    # arm.set_servo_angle(angle=(q + dq).tolist(), ...)
+                    # arm.set_gripper_position(...)
 
                     states.append(state)
                     actions.append(action)
@@ -336,12 +355,13 @@ def main():
                 ep_states_list.append(np.asarray(states, dtype=np.float32))
                 ep_actions_list.append(np.asarray(actions, dtype=np.float32))
 
-                plot_3d_positions(np.array(eefs)[:,:3])
+                plot_3d_positions(np.array(eefs)[:, :3])
 
+            # Save inference rollouts
             np.savez(
                 args.out,
-                states=np.array(ep_states_list, dtype=object),   # (E,) each item (Ti,7)
-                actions=np.array(ep_actions_list, dtype=object), # (E,) each item (Ti,8)
+                states=np.array(ep_states_list, dtype=object),
+                actions=np.array(ep_actions_list, dtype=object),
                 action_type="delta_joint_angles",
                 unit="radians"
             )
