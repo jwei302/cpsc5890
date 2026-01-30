@@ -54,20 +54,20 @@ def train_bc_on_arrays(
     """
 
     # TODO: compute normalization stats on training arrays
-    X_mean, X_std = None, None  # TODO
-    Y_mean, Y_std = None, None  # TODO
+    X_mean, X_std = compute_norm_stats(X_raw_train)  # TODO
+    Y_mean, Y_std = compute_norm_stats(Y_raw_train)  # TODO
 
     # TODO: normalize (X_raw_train, X_raw_test, Y_raw_train, Y_raw_test)
-    Xtr = None  # TODO
-    Xte = None  # TODO
-    Ytr = None  # TODO
-    Yte = None  # TODO
+    Xtr = normalize(X_raw_train, X_mean, X_std)  # TODO
+    Xte = normalize(X_raw_test, X_mean, X_std)  # TODO
+    Ytr = normalize(Y_raw_train, Y_mean, Y_std)  # TODO
+    Yte = normalize(Y_raw_test, Y_mean, Y_std)  # TODO
 
     # TODO: wrap in datasets + loaders
-    train_ds = None  # TODO
-    test_ds = None   # TODO
-    train_loader = None  # TODO
-    test_loader = None   # TODO
+    train_ds = TensorDataset(Xtr, Ytr)  # TODO
+    test_ds = TensorDataset(Xte, Yte)   # TODO
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)  # TODO
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=True)   # TODO
 
     # TODO: create model, optimizer, loss
     model = None      # TODO
