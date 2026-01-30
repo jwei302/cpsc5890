@@ -35,8 +35,9 @@ Use a pre-recorded demonstration dataset ```asset/demo.npz``` to train a BC mode
 
 python -m scripts.bc --mode train --ip <robot_ip> --epochs <epochs> --batch_size <batch_size> --lr <lr>
 ```
--Experiment with hyperparameters (epochs, batch_size, lr)
--Observe the training and test loss over epochs
+* Experiment with hyperparameters (epochs, batch_size, lr)
+
+* Observe the training and test loss over epochs
 
 ### Step 2: Run inference on the robot
 Use the trained BC model to generate actions on the robot:
@@ -45,14 +46,13 @@ Use the trained BC model to generate actions on the robot:
 
 python -m scripts.bc --ip <robot_ip> --mode inference
 ```
-- The robot will replay actions predicted by the BC model
-- Observe smoothness, accuracy, and timing relative to the original demonstration
-- Record the EEF state trajectory using provided visualization code
+The robot will replay actions predicted by the BC model
+Observe smoothness, accuracy, and timing relative to the original demonstration
+Record the EEF state trajectory using the provided visualization code.
 
 ### Step 3: Training and Inference Using High-Frequency Data
-Repeat Step 1 and 2 using ```asset/demo_high_freq.npz``` instead,
 
-Train the BC model using the high-frequency dataset:
+Repeat Step 1 and 2 using ```asset/demo_high_freq.npz``` instead.
 
 ```bash
 python -m scripts.bc --mode train --ip <robot_ip> \
@@ -77,7 +77,7 @@ Pay attention to smoothness, responsiveness, and stability.
 
 Compare execution timing and trajectory fidelity against the original demonstrations.
 
-Record the EEF state trajectory using provided visualization code.
+Record the EEF state trajectory using the provided visualization code.
 
 ### What to Record and Report
 * Are the movements smooth?
@@ -87,7 +87,7 @@ Record the EEF state trajectory using provided visualization code.
 * Training hyperparameters: epochs, batch_size, lr
 * Loss over time. Final training and test loss
 * Visualization of visited EEF states
-* Record a video of success and failures, and caption it explaining when success and failures occur
+* Record a video of successes and failures
 
 ### Reflection Questions
 * How closely does the BC model reproduce the original demonstrations?
@@ -95,8 +95,7 @@ Record the EEF state trajectory using provided visualization code.
 * What could go wrong if the robot starts from a pose outside the demonstration distribution?
 * Why is normalization of states and actions important for BC performance? Is this the only way to pre-process data?
 
-
-## Part 3: Dagger
+## Part 3: DAgger
 
 ### Goal
 
@@ -104,9 +103,7 @@ In this part, you will iteratively improve the Behavior Cloning (BC) policy by c
 
 #### Key Concept:
 
-Vanilla BC only learns from offline demonstrations.
-
-DAgger collects states visited by the learned policy and adds expert labels, reducing distributional shift.
+Vanilla BC only learns from offline demonstrations. DAgger collects states visited by the learned policy and adds expert labels, reducing distributional shift.
 
 ### Step 1: Initialize DAgger
 
@@ -114,7 +111,7 @@ Use the high-frequency demonstration dataset ```asset/demo_high_freq.npz``` to t
 
 ```bash
 
-python -m lab2.scripts.dagger \
+python -m scripts.dagger \
     --mode train \
     --data asset/demo_high_freq.npz \
     --epochs <epochs> \
@@ -125,10 +122,10 @@ python -m lab2.scripts.dagger \
 This is your starting BC model.
 
 ### Step 2: Run DAgger Iterations
-Run DAgger to collect new on-policy states and aggregate them with the original dataset. Finish any TODO before runing the following script.
+Run DAgger to collect new on-policy states and aggregate them with the original dataset. Finish any TODO before running the following script.
 
 ```bash
-python -m lab2.scripts.dagger \
+python -m scripts.dagger \
     --mode dagger \
     --ip <robot_ip>
 ```
