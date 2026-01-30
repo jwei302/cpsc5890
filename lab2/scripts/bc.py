@@ -69,7 +69,12 @@ def load_data_by_episode(path, H, test_frac=0.2, seed=0):
         X, Y = [], []
 
         # TODO: implement episode flattening with horizon H
-
+        for idx in episode_indices:
+            state, action = states[idx], actions[idx]
+            T = len(state)
+            for t in range(H-1, T):
+                X.append(state[t - H + 1: t+1].reshape(-1))
+                Y.append(action[t])
         return (
             np.asarray(X, dtype=np.float32),
             np.asarray(Y, dtype=np.float32),
@@ -91,7 +96,9 @@ def compute_norm_stats(X, eps=1e-8):
     - return (mean, std)
     """
     # TODO
-    raise NotImplementedError
+    mu = X.mean(axis=0)
+    sigma = np.maximum(X.std(axis=0), eps)
+    return mu, sigma
 
 
 def normalize(X, mean, std):
@@ -100,7 +107,7 @@ def normalize(X, mean, std):
     - return normalized X
     """
     # TODO
-    raise NotImplementedError
+    return (X - mean) / std
 
 # -----------------------------
 # BC policy
@@ -119,7 +126,12 @@ class BCPolicy(nn.Module):
         super().__init__()
         # -------------------------------
         # TODO: define network layers
-        self.net = None
+        self.net = nn.Sequential(
+            nn.Linear(obs_dim, 32), 
+            nn.Linear(32, 32), 
+            nn.ReLU(inplace=True),
+            nn.Linear(32, act_dim)
+        )
         # -------------------------------
 
     def forward(self, x):
@@ -127,8 +139,7 @@ class BCPolicy(nn.Module):
         TODO (optional):
         - return self.net(x)
         """
-        # TODO
-        raise NotImplementedError
+        return self.net(x)
 
 # -----------------------------
 # Train / eval
@@ -143,18 +154,18 @@ def evaluate(model, loader, device):
     """
     model.eval()
     mse, n = 0.0, 0
+    criterion = nn.MSELoss(reduction = 'sum')
 
     with torch.no_grad():
         for x, y in loader:
             x, y = x.to(device), y.to(device)
 
             # TODO: forward pass
-            pred = None  # TODO
+            pred = model.forward(x)  # TODO
 
             # TODO: accumulate sum of squared error
-            # mse += ...
-            # n += ...
-            raise NotImplementedError
+            mse += criterion(pred, y)
+            n += x.shape[0]
 
     return mse / n
 
@@ -190,12 +201,15 @@ def main():
     # Normalize using TRAIN statistics only
     # TODO: compute (X_mean, X_std) from Xtr
     # TODO: compute (Y_mean, Y_std) from Ytr
-    X_mean, X_std = None, None  # TODO
-    Y_mean, Y_std = None, None  # TODO
+    X_mean, X_std = compute_norm_stats(Xtr)  # TODO
+    Y_mean, Y_std = compute_norm_stats(Ytr)  # TODO
 
     # TODO: normalize Xtr and Xte using X_mean/X_std
     # TODO: normalize Ytr and Yte using Y_mean/Y_std
-    raise NotImplementedError
+    Xtr = normalize(Xtr, X_mean, X_std)
+    Xte = normalize(Xte, X_mean, X_std)
+    Ytr = normalize(Ytr, Y_mean, Y_std)
+    Yte = normalize(Yte, Y_mean, Y_std)
 
     if args.mode == "train":
 
@@ -223,10 +237,11 @@ def main():
                 x, y = x.to(device), y.to(device)
 
                 # TODO:
-                # - forward: pred = model(x)
-                # - loss = loss_fn(pred, y)
-                # - optimizer step: zero_grad(), backward(), step()
-                raise NotImplementedError
+                pred = model(x)
+                loss = loss_fn(pred, y)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
             if ep % 5 == 0 or ep == 1:
                 train_mse = evaluate(model, train_loader, device)
@@ -239,11 +254,11 @@ def main():
 
         # Save model
         # TODO: save model weights to asset/bc_policy.pt
-        raise NotImplementedError
+        torch.save(model.state_dict(), 'asset/bc_policy.pt')
 
         # Save normalization stats
         # TODO: save X_mean, X_std, Y_mean, Y_std to asset/bc_norm.npz
-        raise NotImplementedError
+        np.savez('asset/bc_norm.npz', X_mean=X_mean, X_std=X_std, Y_mean=Y_mean, Y_std=Y_std)
 
         print("Model and normalization saved.")
 
@@ -253,13 +268,17 @@ def main():
         model = BCPolicy(obs_dim=Xtr.shape[1], act_dim=Ytr.shape[1]).to(device)
 
         # TODO: load weights from asset/bc_policy.pt
-        raise NotImplementedError
+        model.load_state_dict(torch.load("asset/bc_policy.pt", weights_only=True))
 
         model.eval()
 
         # Load normalization
         # TODO: load bc_norm.npz and set X_mean, X_std, Y_mean, Y_std
-        raise NotImplementedError
+        with np.load("asset/bc_norm.npz") as data:
+            X_mean = data["X_mean"]
+            X_std = data["X_std"]
+            Y_mean = data["Y_mean"]
+            Y_std = data["Y_std"]
 
         arm = connect_arm(ArmConfig(ip=args.ip))
 
@@ -305,6 +324,7 @@ def main():
                 eefs = []
 
                 obs_buffer = deque(maxlen=args.obs_horizon)
+                obs_horizon = args.obs_horizon
 
                 for t in range(args.inf_steps):  # fixed horizon (safety)
 
@@ -314,40 +334,58 @@ def main():
                     # - g = get_gripper_position(arm)
                     # - state = np.concatenate([q, [g]])  (or whatever your obs definition is)
                     # - eef_state = get_tcp_pose(arm)
-                    q = None          # TODO
-                    g = None          # TODO
-                    state = None      # TODO
-                    eef_state = None  # TODO
+                    q = get_joint_angles(arm)          # TODO
+                    g = get_gripper_position(arm)          # TODO
+                    state = np.concatenate([q,[g]])      # TODO
+                    eef_state = get_tcp_pose(arm)  # TODO
 
                     # TODO: obs_buffer.append(state)
                     # TODO: if len(obs_buffer) < obs_horizon: continue
-                    raise NotImplementedError
-
+                    obs_buffer.append(state)
+                    # print("Before Continue")
+                    if len(obs_buffer) < obs_horizon: continue
+                    # print("After continue")
                     # ---- Stack + normalize ----
                     # TODO:
                     # - obs_stack = np.concatenate(list(obs_buffer), axis=0)
                     # - x = (obs_stack - X_mean) / X_std
                     # - x = torch.tensor(x, dtype=torch.float32).to(device)
-                    raise NotImplementedError
+                    obs_stack = np.concatenate(list(obs_buffer), axis=0)
+                    x = (obs_stack - X_mean) / X_std
+                    x = torch.tensor(x, dtype=torch.float32).to(device)
 
                     # ---- Predict ----
                     # TODO:
                     # with torch.no_grad():
                     #   a_norm = model(x).cpu().numpy()
-                    raise NotImplementedError
+                    with torch.no_grad():
+                        a_norm = model(x).cpu().numpy()
+                        # print(a_norm)
+                        # print(Y_std, Y_mean)
 
                     # ---- Unnormalize ----
                     # TODO:
                     # action = a_norm * Y_std + Y_mean
                     # dq = action[:7]
                     # dg = ...
-                    raise NotImplementedError
+                    action = a_norm * Y_std + Y_mean
+                    # print(action)
+                    dq = action[:7]
+                    dg = action[7] # CHECK HERE
 
                     # ---- Execute ----
                     # TODO:
                     # arm.set_servo_angle(angle=(q + dq).tolist(), ...)
                     # arm.set_gripper_position(...)
-
+                    print(f'{q=}', f'{dq.tolist()}')
+                    # arm.set_servo_angle(angle=(q+dq).tolist(), speed=20.0, is_radian=True, wait=True)
+                    # g_fin = 600
+                    # if dg == 1:
+                    #     arm.set_gripper_position(pos=(600), speed=0.1, wait=True)
+                    # elif dg == 0:
+                    #     arm.set_gripper_position(pos=(300), speed=0.1, wait=True)
+                    # else: 
+                    #     arm.set_gripper_position(pos=(g_fin), speed=0.1, wait=True)
                     states.append(state)
                     actions.append(action)
                     eefs.append(eef_state)
