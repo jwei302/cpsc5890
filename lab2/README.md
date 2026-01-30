@@ -66,7 +66,7 @@ Monitor training and test loss curves.
 
 Compare convergence behavior against the low-frequency dataset.
 
-Run inference using the BC model trained on high-frequency data. Be sure to turn off ```wait=False``` in ```set_servo_angle``` (line 355) and ```set_gripper_position``` (line 361) to allow high frequency control.
+Run inference using the BC model trained on high-frequency data. Be sure to set ```wait=False``` in ```set_servo_angle``` (line 355) and ```set_gripper_position``` (line 361) to enable high-frequency control. Leave ```wait=True``` at anywhere else.
 
 ```bash
 python -m scripts.bc --mode inference --ip <robot_ip>
