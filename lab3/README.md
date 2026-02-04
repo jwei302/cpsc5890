@@ -1,4 +1,4 @@
-# Lab 1 — xArm7 Intro: Safety, GUI, FK/IK, Demos
+# Lab 3 — xArm7 Intro: Safety, GUI, FK/IK, Demos
 
 ## Objectives
 - Set up an account on the lab computer
