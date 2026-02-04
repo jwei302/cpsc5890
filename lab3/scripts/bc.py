@@ -4,7 +4,7 @@ from tqdm import tqdm
 from robomimic.models.obs_nets import ObservationEncoder
 from robomimic.utils.tensor_utils import time_distributed
 
-from dataset import make_loaders
+from scripts.dataset import make_loaders
 
 
 class Conv1dBlock(nn.Module):
@@ -190,19 +190,28 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = BCConvMLPPolicy(
+    model_kwargs = dict(
         action_dim=8,
         obs_dim=8,
         obs_horizon=2,
         pred_horizon=16,
         image_type="both",
+    )
 
-    ).to(device)
+    model = BCConvMLPPolicy(**model_kwargs).to(device)
 
-    train_bc(model, train_loader, test_loader, device=device, epochs=30)
-        save_final(
+    train_bc(model, train_loader, test_loader, device=device, epochs=2)
+
+    save_model(
         "asset/checkpoints/bcconv_final.pt",
         model,
         stats,
         model_kwargs
     )
+
+    ckpt = torch.load("asset/checkpoints/bcconv_final.pt", map_location="cpu", weights_only=False)
+    model = BCConvMLPPolicy(**ckpt["model_kwargs"])
+    model.load_state_dict(ckpt["model_state_dict"])
+    model.eval()
+
+    stats = ckpt["stats"]
