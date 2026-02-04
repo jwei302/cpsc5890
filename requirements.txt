@@ -1,3 +1,0 @@
-xarm-python-sdk
-numpy<2
-torch
