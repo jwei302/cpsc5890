@@ -66,57 +66,6 @@ How can you tell whether the policy is actually using visual information?
 We compress actions using:
 action → encoder → latent z → decoder → reconstructed action
 
-### Two Axes to Explore
-
-| Axis | Meaning |
-|------|---------|
-| Model complexity | depth / width of encoder and decoder |
-| Latent dimension | size of bottleneck |
-
-### Deliverable 1 — AE Performance Grid
-
-Create a **3×3 table**:
-
-| Latent Dim ↓ / Model Size → | Small | Medium | Large |
-|-----------------------------|-------|--------|-------|
-| Low dim                     |       |        |       |
-| Mid dim                     |       |        |       |
-| High dim                    |       |        |       |
-
-Report:
-- Training reconstruction loss
-- Validation reconstruction loss
-
-### Questions
-
-- When does increasing latent size stop helping?
-- Which model overfits?
-- What is the best latent dimension for reconstruction?
-
-
-Now BC predicts **latent actions** instead of raw actions:
-
-BC: (obs) → z
-Decoder(z) → action
-
-
-### Deliverable 2 — BC Performance Grid
-
-Same 3×3 table, but report:
-
-- BC training loss  
-- BC validation loss  
-- (Optional) task success rate  
-
-### Key Question
-
-Does lower AE reconstruction loss → better BC performance?  
-Often **no** — reconstruction quality does not always align with control usefulness.
-
----
-
-## Part 4 — Variational Autoencoders (VAE)
-
 VAEs learn a **distribution** over latent actions.
 
 Loss:
@@ -139,9 +88,54 @@ If you:
 
 then a VAE becomes a regular AE.
 
-Train best-performing architecture on real data.
+### Two Axes to Explore
+
+| Axis | Meaning |
+|------|---------|
+| Model complexity | depth / width of encoder and decoder |
+| Latent dimension | size of bottleneck |
+
+### Deliverable 1 — VAE Performance Grid
+
+Create a **3×3 table**:
+
+| Latent Dim ↓ / Model Size → | Small | Medium | Large |
+|-----------------------------|-------|--------|-------|
+| Low dim                     |       |        |       |
+| Mid dim                     |       |        |       |
+| High dim                    |       |        |       |
+
+Report:
+- Training reconstruction loss
+- Validation reconstruction loss
+
+### Questions
+
+- When does increasing latent size stop helping?
+- Which model overfits?
+- What is the best latent dimension for reconstruction?
+
+Now BC predicts **latent actions** instead of raw actions:
+
+BC: (obs) → z
+Decoder(z) → action
+
+### Deliverable 2 — BC Performance Grid
+
+Same 3×3 table, but report:
+
+- BC training loss  
+- BC validation loss  
+- (Optional) task success rate  
+
+### Question
+
+Does lower VAE reconstruction loss → better BC performance?  
+Often **no** — reconstruction quality does not always align with control usefulness.
 
 ### Required Trials
+
+Inference the best performing model on the real robot:
 
 | Type | # Trials |
 |------|----------|
@@ -149,8 +143,6 @@ Train best-performing architecture on real data.
 | OOD start | 2 |
 
 Submit videos.
-
----
 
 ## Part 6 — Repeat for State Embeddings
 
