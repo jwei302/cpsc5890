@@ -45,6 +45,18 @@ to
    - ID start states  
    - OOD start states  
 
+### Reflection Questions
+
+When do images actually help Behavior Cloning?
+
+Why is the image encoder applied independently at each timestep?
+
+Why can BatchNorm be problematic in image-based BC?
+
+What are the risks of training an image encoder from scratch in BC?
+
+How can you tell whether the policy is actually using visual information?
+
 ---
 
 ## Part 2 — Action Autoencoders
