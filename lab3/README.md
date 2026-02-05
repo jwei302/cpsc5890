@@ -19,6 +19,8 @@ By the end of this lab, you will:
 
 ## Part 1 — Visuomotor Behavior Cloning
 
+Download training dataset of lifting task: https://drive.google.com/file/d/1wXDLTP4kNBk1rIlRg8erWKcrAW5BFSfq/view?usp=drive_link
+
 We extend BC from:
 state → action
 to
