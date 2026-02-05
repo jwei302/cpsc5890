@@ -17,9 +17,15 @@ By the end of this lab, you will:
 
 ---
 
-## Part 1 — Visuomotor Behavior Cloning
+## Setup
+
+Install GELLO software: https://github.com/wuphilipp/gello_software
 
 Download training dataset of lifting task: https://drive.google.com/file/d/1wXDLTP4kNBk1rIlRg8erWKcrAW5BFSfq/view?usp=drive_link
+
+Connect to Yale Secure: https://yale.service-now.com/it?id=kb_article&sysparm_article=KB0025500
+
+## Part 1 — Visuomotor Behavior Cloning
 
 We extend BC from:
 state → action
