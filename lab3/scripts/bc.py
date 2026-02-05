@@ -10,12 +10,20 @@ from scripts.dataset import make_loaders
 class Conv1dBlock(nn.Module):
     def __init__(self, inp, out, k=3, n_groups=8):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Conv1d(inp, out, k, padding=k//2),
-            nn.GroupNorm(n_groups, out),
-            nn.Mish()
-        )
-    def forward(self, x): return self.net(x)
+        """
+        TODO:
+        - 1D convolution with padding
+        - normalization (GroupNorm)
+        - nonlinearity
+        """
+        raise NotImplementedError
+
+    def forward(self, x):
+        """
+        TODO:
+        - apply the block to input x
+        """
+        raise NotImplementedError
 
 
 def swap_bn_to_gn(module: nn.Module, max_groups: int = 32):
@@ -60,14 +68,13 @@ class BCConvMLPPolicy(nn.Module):
         self.image_type = image_type
 
         if img_backbone_kwargs is None:
-            img_backbone_kwargs = {
-                "input_shape": [3, 96, 96],
-                "backbone_class": "ResNet18Conv",
-                "backbone_kwargs": {"pretrained": False, "input_coord_conv": False},
-                "pool_class": "SpatialSoftmax",
-                "pool_kwargs": {"num_kp": 32},
-                "feature_dimension": img_feat_dim,
-            }
+            """
+            TODO:
+            - define img_backbone_kwargs for VisualCore, read robomimic documentation: https://robomimic.github.io/docs/modules/models.html
+            - must specify input_shape, backbone, pooling, and feature dimension
+            """
+            raise NotImplementedError
+            
         img_feat_dim = img_backbone_kwargs["feature_dimension"]
 
         # --- encoders (robomimic) ---
@@ -80,8 +87,11 @@ class BCConvMLPPolicy(nn.Module):
         self.obs_encoder.make()
 
         if image_type == "both":
-            swap_bn_to_gn(self.obs_encoder.obs_nets["external"])
-            swap_bn_to_gn(self.obs_encoder.obs_nets["wrist"])
+            """
+            TODO:
+            - decide whether to replace BatchNorm with GroupNorm in visual backbones
+            - justify your choice for small-batch BC
+            """
 
         # per-timestep feature dim
         per_t = obs_dim + (2 * img_feat_dim if image_type == "both" else 0)
@@ -100,21 +110,12 @@ class BCConvMLPPolicy(nn.Module):
         )
 
     def forward(self, obs_state, obs_image=None, obs_wrist_image=None):
-        feats = [obs_state]  # (B,Hobs,obs_dim)
-
-        if self.image_type == "both":
-            ext = time_distributed(obs_image, self.obs_encoder.obs_nets["external"], inputs_as_kwargs=False)
-            wst = time_distributed(obs_wrist_image, self.obs_encoder.obs_nets["wrist"], inputs_as_kwargs=False)
-            feats += [ext, wst]  # each (B,Hobs,img_feat_dim)
-
-        x = torch.cat(feats, dim=-1)      # (B,Hobs,per_t)
-        x = x.transpose(1, 2)             # (B,per_t,Hobs)
-
-        x = self.temporal(x)              # (B,conv_channels,Hobs)
-        x = x.mean(dim=-1)                # (B,conv_channels)  global pool over time
-
-        y = self.head(x)                  # (B,Hpred*action_dim)
-        return y.view(x.shape[0], self.pred_horizon, self.action_dim)
+        """
+        TODO:
+        - encode visual observations (if enabled), use "time_distributed" function from robomimic
+        - concatenate state + image features per timestep
+        """
+        raise NotImplementedError
 
 def train_bc(model, train_loader, test_loader, device="cuda", lr=1e-4, wd=1e-6, epochs=30):
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
@@ -131,9 +132,13 @@ def train_bc(model, train_loader, test_loader, device="cuda", lr=1e-4, wd=1e-6, 
             obs_wimg = b.get("obs_wrist_image", None)
             if obs_img is not None:  obs_img = obs_img.to(device)
             if obs_wimg is not None: obs_wimg = obs_wimg.to(device)
-
-            pred = model(obs_state, obs_img, obs_wimg)
-            loss = loss_fn(pred, tgt)
+                
+            """
+            TODO:
+            - run policy forward pass
+            - compute behavior cloning loss
+            """
+            raise NotImplementedError
 
             opt.zero_grad(set_to_none=True)
             loss.backward()
@@ -156,9 +161,13 @@ def train_bc(model, train_loader, test_loader, device="cuda", lr=1e-4, wd=1e-6, 
                 obs_wimg = b.get("obs_wrist_image", None)
                 if obs_img is not None:  obs_img = obs_img.to(device)
                 if obs_wimg is not None: obs_wimg = obs_wimg.to(device)
-
-                pred = model(obs_state, obs_img, obs_wimg)
-                loss = loss_fn(pred, tgt)
+                    
+                """
+                TODO:
+                - forward pass without gradients
+                - accumulate validation loss
+                """
+                raise NotImplementedError
 
                 bs = obs_state.size(0)
                 te += loss.item() * bs
@@ -180,7 +189,7 @@ if __name__ == "__main__":
 
     train_loader, test_loader, stats = make_loaders(
         "/home/robot-lab/Downloads/xarm_lift_data",
-        obs_h=2,
+        obs_h=1,
         pred_h=16,
         batch_size=64,
         include_images=True,
