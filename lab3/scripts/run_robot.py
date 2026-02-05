@@ -20,7 +20,7 @@ class Args:
     robot_port: int = 6001
     wrist_camera_port: int = 5000
     base_camera_port: int = 5001
-    hostname: str = "127.0.0.1"
+    hostname: str = "gadget.stdusr.yale.internal"
     hz: int = 30
 
     # debug / dev
