@@ -63,21 +63,32 @@ class ActionVAE(nn.Module):
         )
 
     def encode(self, a):
-        B, H, A = a.shape
-        h = self.enc(a.reshape(B * H, A))
-        mu = self.mu(h).reshape(B, H, self.z_dim)
-        logvar = self.logvar(h).reshape(B, H, self.z_dim)
-        return mu, logvar
+        """
+        TODO:
+        - flatten (B, H, A) -> (B*H, A)
+        - run encoder
+        - produce mu and logvar
+        - reshape back to (B, H, z_dim)
+        """
+        raise NotImplementedError
 
     @staticmethod
     def reparam(mu, logvar):
-        eps = torch.randn_like(mu)
-        return mu + eps * torch.exp(0.5 * logvar)
+        """
+        TODO:
+        - sample epsilon ~ N(0, I)
+        - return reparameterized z
+        """
+        raise NotImplementedError
 
     def decode(self, z):
-        B, H, Z = z.shape
-        a_hat = self.dec(z.reshape(B * H, Z)).reshape(B, H, self.action_dim)
-        return a_hat
+        """
+        TODO:
+        - flatten (B, H, Z)
+        - run decoder
+        - reshape back to (B, H, action_dim)
+        """
+        raise NotImplementedError
 
     def forward(self, a):
         mu, logvar = self.encode(a)
@@ -104,10 +115,14 @@ def train_action_vae(action_vae, train_loader, test_loader, device="cuda",
             a = b["pred_action"].to(device)
 
             _, a_hat, mu, logvar = action_vae(a)
-
-            recon = nn.functional.mse_loss(a_hat, a, reduction="mean")
-            kl = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-            kl = kl.mean()
+            
+            """
+            TODO:
+            - compute reconstruction loss (MSE)
+            - compute KL divergence to N(0, I)
+            - combine into total loss
+            """
+            raise NotImplementedError
 
             loss = recon + beta * kl
 
@@ -218,21 +233,14 @@ class BCConvMLPPolicyLatent(nn.Module):
         )
 
     def forward(self, obs_state, obs_image=None, obs_wrist_image=None):
-        feats = [obs_state]  # (B,Hobs,obs_dim)
-
-        if self.image_type == "both":
-            ext = time_distributed(obs_image, self.obs_encoder.obs_nets["external"], inputs_as_kwargs=False)
-            wst = time_distributed(obs_wrist_image, self.obs_encoder.obs_nets["wrist"], inputs_as_kwargs=False)
-            feats += [ext, wst]  # (B,Hobs,img_feat_dim)
-
-        x = torch.cat(feats, dim=-1)      # (B,Hobs,per_t)
-        x = x.transpose(1, 2)             # (B,per_t,Hobs)
-
-        x = self.temporal(x)              # (B,conv_channels,Hobs)
-        x = x.mean(dim=-1)                # (B,conv_channels)
-
-        y = self.head(x)                  # (B,Hpred*z_dim)
-        return y.view(x.shape[0], self.pred_horizon, self.z_dim)
+        """
+        TODO:
+        - encode images (if used), use "time_distributed" function from robomimic
+        - concatenate state + visual features
+        - apply temporal conv
+        - predict latent sequence
+        """
+        raise NotImplementedError
 
 
 def train_bc_to_latent(policy, action_ae, train_loader, test_loader, device="cuda", lr=1e-4, wd=1e-6, epochs=30):
@@ -260,8 +268,12 @@ def train_bc_to_latent(policy, action_ae, train_loader, test_loader, device="cud
             if obs_wimg is not None: obs_wimg = obs_wimg.to(device)
 
             with torch.no_grad():
-                mu, logvar = action_ae.encode(a)
-                z_tgt = mu
+                """
+                TODO:
+                - encode actions using action_ae
+                - choose appropriate latent target (mu or sampled z)
+                """
+                raise NotImplementedError
 
             z_pred = policy(obs_state, obs_img, obs_wimg)
             loss = loss_fn(z_pred, z_tgt)
