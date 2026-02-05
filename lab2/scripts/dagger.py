@@ -64,23 +64,37 @@ def train_bc_on_arrays(
     Yte = normalize(Y_raw_test, Y_mean, Y_std)  # TODO
 
     # TODO: wrap in datasets + loaders
-    train_ds = TensorDataset(Xtr, Ytr)  # TODO
-    test_ds = TensorDataset(Xte, Yte)   # TODO
+    train_ds = TensorDataset(torch.tensor(Xtr), torch.tensor(Ytr))  # TODO
+    test_ds = TensorDataset(torch.tensor(Xte), torch.tensor(Yte))   # TODO
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)  # TODO
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=True)   # TODO
 
     # TODO: create model, optimizer, loss
-    model = None      # TODO
-    optimizer = None  # TODO
-    loss_fn = None    # TODO
+    model = BCPolicy(obs_dim=Xtr.shape[1], act_dim=Ytr.shape[1]).to(device) # TODO
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)# TODO
+    loss_fn = nn.MSELoss()    # TODO
 
     # TODO: training loop
-    # for ep in range(1, epochs+1):
-    #   model.train()
-    #   for x,y in train_loader:
+    for ep in range(1, epochs+1):
+        model.train()
+        for x,y in train_loader:
+            x, y = x.to(device), y.to(device)
+            pred = model(x)
+            loss = loss_fn(pred, y)
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            optimizer.step()
+        if ep%5 == 0 or ep==1:
+            train_mse = evaluate(model, train_loader, device)
+            test_mse = evaluate(model, test_loader, device)
+            print(
+                f"Epoch {ep:03d} | "
+                f"Train MSE: {train_mse:.6f} | "
+                f"Test MSE: {test_mse:.6f}"
+            )
     #     ...
     #   optionally print evaluate() every few epochs
-    raise NotImplementedError
+    # raise NotImplementedError
 
     return model, (X_mean, X_std, Y_mean, Y_std)
 
@@ -139,27 +153,29 @@ def rollout_dagger_collect(
             # q = get_joint_angles(arm)
             # g = float(get_gripper_position(arm))
             # state = np.concatenate([q, [g]]).astype(np.float32)
-            q = None       # TODO
-            g = None       # TODO
-            state = None   # TODO
+            q = get_joint_angles(arm) # TODO
+            g = float(get_gripper_position(arm)) # TODO
+            state = np.concatenate([q, [g]]).astype(np.float32) # TODO
 
             # TODO: obs_buffer.append(state)
-            # if len(obs_buffer) < obs_horizon: continue
-            raise NotImplementedError
+            obs_buffer.append(state)
+            if len(obs_buffer) < obs_horizon: 
+                continue
+            # raise NotImplementedError
 
             # TODO: obs_stack = np.concatenate(list(obs_buffer), axis=0).astype(np.float32)
-            obs_stack = None  # TODO
+            obs_stack = np.concatenate(list(obs_buffer), axis=0).astype(np.float32) # TODO
 
             # --- expert label (DAgger) ---
             # IMPORTANT: label with expert for visited states
             # NOTE: policy(arm) returns (a_exp, done) in your code
             # TODO: call expert policy
-            a_exp, done = None, None  # TODO
+            a_exp, done = policy(arm)# TODO
 
             # TODO: store training pair
-            # X_new.append(obs_stack)
-            # Y_new.append(a_exp)
-            raise NotImplementedError
+            X_new.append(obs_stack)
+            Y_new.append(a_exp)
+            # raise NotImplementedError
 
             # --- mixture execution ---
             # TODO:
@@ -174,7 +190,14 @@ def rollout_dagger_collect(
             #
             # Then choose:
             #   action_exec = a_exp if rng < beta else a_learned
-            raise NotImplementedError
+            # raise NotImplementedError
+            x = (obs_stack - X_mean) / X_std
+            x = torch.tensor(x, dtype=torch.float32, device=device)
+            with torch.no_grad():
+                a_norm = model(x).cpu().numpy()
+            a_learned = a_norm * Y_std + Y_mean
+            rng = np.random.rand()
+            action_exec = a_exp if rng < beta else a_learned
 
             # --- execute (skeleton kept, students fill action_exec + dq) ---
             dq = action_exec[:7]
@@ -243,13 +266,24 @@ def main():
         print(f"Train samples: {len(Xtr0)} | Test samples: {len(Xte0)}")
 
         # TODO: train initial BC on demonstrations using train_bc_on_arrays
-        model, (X_mean, X_std, Y_mean, Y_std) = None, (None, None, None, None)  # TODO
-        raise NotImplementedError
+        model, (X_mean, X_std, Y_mean, Y_std) = train_bc_on_arrays(
+            Xtr0, Ytr0, Xte0, Yte0, 
+            device=device, 
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            lr=args.lr)
+        # raise NotImplementedError
 
         # TODO (optional): save model and normalization
+        torch.save(model.state_dict(), 'asset/dagger_policy.pt')
+        np.savez('asset/dagger_norm.npz', 
+                 X_mean=X_mean, 
+                 X_std=X_std,
+                 Y_mean=Y_mean,
+                 Y_std=Y_std)
         # torch.save(...)
         # np.savez(...)
-        raise NotImplementedError
+        # raise NotImplementedError
 
     elif args.mode == "dagger":
         # Aggregated dataset starts with original demos
@@ -286,7 +320,27 @@ def main():
                 # - aggregate X_new/Y_new into Xtr_agg/Ytr_agg
                 # - retrain using train_bc_on_arrays on aggregated dataset
                 # - save artifacts each iteration (optional)
-                raise NotImplementedError
+                # raise NotImplementedError
+                X_new, Y_new = rollout_dagger_collect(
+                    arm=arm, 
+                    model=model,
+                    norm_stats=(X_mean, X_std, Y_mean, Y_std),
+                    device=device
+                    obs_horizon=args.obs_horizon,
+                    episodes=args.epsiodes, 
+                    beta=beta
+                )
+                Xtr_agg = np.concatenate((Xtr_agg, X_new))
+                Ytr_agg = np.concatenate((Ytr_agg, Y_new))
+                model, (X_mean, X_std, Y_mean, Y_std) = train_bc_on_arrays(
+                    Xtr_agg, Ytr_agg, Xte, Yte,
+                    device=device,
+                    epochs=args.epochs,
+                    batch_size=args.batch_size,
+                    lr=args.lr,
+                )
+                # not saving artifcats because we are not running it
+
 
         finally:
             disconnect_arm(arm)
@@ -296,13 +350,16 @@ def main():
         model = BCPolicy(obs_dim=Xtr0.shape[1], act_dim=Ytr0.shape[1]).to(device)
 
         # TODO: load dagger policy weights (asset/dagger_policy.pt)
-        raise NotImplementedError
+        # raise NotImplementedError
+        model.load_state_dict(torch.load("asset/dagger_policy.pt"), weights_only=True)
 
         model.eval()
 
         # TODO: load dagger normalization (asset/dagger_norm.npz)
-        raise NotImplementedError
-        X_mean, X_std, Y_mean, Y_std = None, None, None, None  # TODO
+        # raise NotImplementedError
+        with np.load("asset/dagger_norm.npz") as data:
+            X_mean, X_std, Y_mean, Y_std = data["X_mean"], data["X_std"], data["Y_mean"], data["Y_std"] # TODO
+
 
         arm = connect_arm(ArmConfig(ip=args.ip))
 
@@ -335,7 +392,33 @@ def main():
 
                 for t in range(args.inf_steps):
                     # TODO: read state, update buffer, stack, normalize, predict, unnormalize, execute
-                    raise NotImplementedError
+                    # raise NotImplementedError
+                    q = get_joint_angles(arm)
+                    g = get_gripper_position(arm)
+                    state=np.concatenate([q, [g]])
+                    eef_state = get_tcp_pose(arm)
+
+                    obs_buffer.append(state)
+
+                    if len(obs_buffer) < args.obs_horizon:
+                        continue
+
+                    obs_stack = np.concatenate(list(obs_buffer), axis=0)
+                    x = (obs_stack - X_mean) / X_std
+                    x = torch.tensor(x, dtype=torch.float32).to(device)
+
+                    with torch.no_grad():
+                        a_norm = model(x).cpu().numpy()
+                    
+                    action = a_norm*Y_std + Y_mean
+                    dq = action[:7]
+                    dg = action[-1]
+                    arm.set_servo_angle(angle=(q+dq).tolist(), speed=20.0, is_radian=True, wait=True)
+                    arm.set_gripper_position(pos=float(dg), speed=0.1, wait=True)
+                    states.append(state)
+                    actions.append(action)
+                    eefs.append(eef_state)
+
 
                 ep_states_list.append(np.asarray(states, dtype=np.float32))
                 ep_actions_list.append(np.asarray(actions, dtype=np.float32))

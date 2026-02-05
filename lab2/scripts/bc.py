@@ -239,7 +239,7 @@ def main():
                 # TODO:
                 pred = model(x)
                 loss = loss_fn(pred, y)
-                optimizer.zero_grad()
+                optimizer.zero_grad(set_to_none=True)
                 loss.backward()
                 optimizer.step()
 
@@ -360,8 +360,6 @@ def main():
                     #   a_norm = model(x).cpu().numpy()
                     with torch.no_grad():
                         a_norm = model(x).cpu().numpy()
-                        # print(a_norm)
-                        # print(Y_std, Y_mean)
 
                     # ---- Unnormalize ----
                     # TODO:
@@ -369,23 +367,15 @@ def main():
                     # dq = action[:7]
                     # dg = ...
                     action = a_norm * Y_std + Y_mean
-                    # print(action)
                     dq = action[:7]
-                    dg = action[7] # CHECK HERE
+                    dg = action[-1] 
 
                     # ---- Execute ----
                     # TODO:
                     # arm.set_servo_angle(angle=(q + dq).tolist(), ...)
                     # arm.set_gripper_position(...)
-                    print(f'{q=}', f'{dq.tolist()}')
-                    # arm.set_servo_angle(angle=(q+dq).tolist(), speed=20.0, is_radian=True, wait=True)
-                    # g_fin = 600
-                    # if dg == 1:
-                    #     arm.set_gripper_position(pos=(600), speed=0.1, wait=True)
-                    # elif dg == 0:
-                    #     arm.set_gripper_position(pos=(300), speed=0.1, wait=True)
-                    # else: 
-                    #     arm.set_gripper_position(pos=(g_fin), speed=0.1, wait=True)
+                    arm.set_servo_angle(angle=(q+dq).tolist(), speed=20.0, is_radian=True, wait=True)
+                    arm.set_gripper_position(pos=float(dg), speed=0.1, wait=True)
                     states.append(state)
                     actions.append(action)
                     eefs.append(eef_state)
