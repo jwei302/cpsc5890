@@ -145,11 +145,14 @@ def train_action_vae(action_vae, train_loader, test_loader, device="cuda",
             for b in test_loader:
                 a = b["pred_action"].to(device)
                 _, a_hat, mu, logvar = action_vae(a)
-
-                recon = nn.functional.mse_loss(a_hat, a, reduction="mean")
-                kl = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-                kl = kl.mean()
-                loss = recon + beta * kl
+                
+                """
+                TODO:
+                - compute reconstruction loss (MSE)
+                - compute KL divergence to N(0, I)
+                - combine into total loss
+                """
+                raise NotImplementedError
 
                 bs = a.size(0)
                 teL += loss.item() * bs
