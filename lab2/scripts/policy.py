@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import json
 import time
+import math
 
 from xarm_lab.arm_utils import connect_arm, disconnect_arm, ArmConfig, get_joint_angles, get_tcp_pose, get_gripper_position
 from xarm_lab.safety import enable_basic_safety, clear_faults
@@ -29,12 +30,16 @@ def policy(arm):
     #   - current joint angles
     #   - current gripper position
     # Hint: use get_joint_angles(arm), get_gripper_position(arm)
+    joint_angles = get_joint_angles(arm) #List[float]
+    gripper_position = get_gripper_position(arm) #float
 
     # TODO 2: Define a time variable or step counter
     # Hint: time.time() or a global counter
+    num_sec = time.time()
 
     # TODO 3: Initialize a 7D delta joint vector (Δq)
     # Example: dq = np.zeros(7)
+    dq = np.zeros(7)
 
     # TODO 4: Modify one or more joint deltas to create motion
     # Examples:
@@ -42,14 +47,33 @@ def policy(arm):
     #   - piecewise constant deltas for square-like motion
     #   - linear ramp forward then backward
 
+    ang_speed = 2 * np.pi * 0.7
+    
+    dq[0] = 0.3 * np.cos(ang_speed * num_sec)
+    dq[1] = 0.3 * np.sin(ang_speed * num_sec)
+
+
     # TODO 5: Choose a gripper command
     #   - keep it fixed
     #   - or periodically open/close
 
+    #every 10 seconds, open and close
+    period_len = 10
+    
+    #t_in_period is the time within 10 second window, e.g. 119.3 is 9.3
+    t_in_period = num_sec % period_len
+
+    action = np.array([0.0])
+    #if starting cycle and closer to 300, open
+    if (t_in_period < 5 and gripper_position < 450) or (t_in_period > 5 and gripper_position > 450):
+        action[0] = 20
+    else:
+        action[0] = -20
+
+
     # TODO 6: Concatenate joint deltas and gripper command
     # Return a numpy array of shape (8,)
-
-    raise NotImplementedError("Implement a simple policy for demonstration")
+    return np.concatenate([dq, action])
 
 
 def main():
