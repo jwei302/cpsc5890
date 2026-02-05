@@ -30,7 +30,6 @@ def policy(arm):
     #   - current gripper position
     # Hint: use get_joint_angles(arm), get_gripper_position(arm)
 
-
     # TODO 2: Define a time variable or step counter
     # Hint: time.time() or a global counter
 

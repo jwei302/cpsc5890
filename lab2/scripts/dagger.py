@@ -325,7 +325,7 @@ def main():
                     arm=arm, 
                     model=model,
                     norm_stats=(X_mean, X_std, Y_mean, Y_std),
-                    device=device
+                    device=device, 
                     obs_horizon=args.obs_horizon,
                     episodes=args.epsiodes, 
                     beta=beta

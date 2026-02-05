@@ -1,5 +1,6 @@
 # Lab 2 — Behavior Cloning (BC) and DAgger
 
+Partners: Jeffrey Wei, Austin Feng
 ## Objectives
 - Understand how demonstrations are represented as data
 - Collect demonstrations using GELLO or kinesthetic teaching
@@ -195,26 +196,52 @@ Record EEF state trajectories using plot_3d_positions.
 
 * How are demonstrations represented in the dataset? What do the observation and action arrays correspond to?
 
+A: 
+
 * How does the sampling frequency (low vs high frequency) affect the recorded data?
+
+A: The higher the frequency, the more smooth the recorded data. The lower the frequency, the choppier the recorded data. 
 
 * Did you notice any noise or irregularities in the demonstrations? How might these affect imitation learning?
 
+A: Did not get to this point in the lab. 
+
 * How closely did the BC model reproduce the original demonstrations? Provide examples.
+
+A: We ran into some errors with the BC model. We suspect some normalization error or torch tensor configuration errors. 
 
 * In which situations did the BC model fail or deviate from the demonstrations? Why might this happen?
 
+A: In more difficult tasks, one wrong action pushes the model into an unknown distribution and causes a compounding error. 
+
 * How does the model behave when the robot starts from a state outside the demonstration distribution?
+
+A: The model hallucinates and is unsure because it is out of domain. It's learned state action pairs are only for states within the demonstration distribution. Thus, it will do poorly. 
 
 * How do hyperparameters (epochs, batch size, learning rate) affect the training and test loss?
 
+A: The more epochs the lower the test loss. A higher learning rate yields a faster decaying loss curve. Increasing batch size helps decrease the stochasticity of gradient descent, but we are unsure if it would improve or worsen the train / test loss. 
+
 * How smooth and responsive were the robot’s actions during BC inference? Were there any jerks or unexpected movements?
+
+A: The actions were relatively jerky. 
 
 * Why is normalization of states and actions crucial for BC? Can you think of other preprocessing methods that might help?
 
+A: It forces input features and output actions to be within a reasonable range, allowing the training signal to be better distributed for supervised learning regression tasks. Without it, the large gripper actions or the different degrees will dominate the gradient signal. Some other preprocessing could be Image Preprocessing / Augmentation such as perturbing the input image to add robustness to the state action pair that the model is learning. 
+
 * How does DAgger address the compounding error problem seen in vanilla BC?
+
+A: It does so by sampling with probability $\beta$ expert demonstrations to add to its training data after every dagger iteration. Then by training with expert demonstration data at the current state, it is able to keep the policy on track. 
 
 * What effect did aggregating on-policy states have on model performance?
 
+A: We did not get to this part. 
+
 * How did the choice of beta (expert probability) affect the policy rollout? What happened when beta decayed too quickly or too slowly?
 
+A: We did not get to this part. We suspect if $\beta$ decays to quickly, then the BC policy may not get enough expert demonstration support, causing errors to seep in. If it is decays too slowly, the the policy may roll super slowly because it is frequently requesting expert help. 
+
 * If DAgger did not improve policy by much, why?
+
+A: We did not get to this part. 
