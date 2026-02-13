@@ -1,2 +1,7 @@
-slides
-jeffreyenv
+# environments
+jeffreyenv/
+Miniconda3-*.sh
+
+# checkpoints / models
+lab3/asset/checkpoints/
+*.pt
