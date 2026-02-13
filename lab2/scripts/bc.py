@@ -25,6 +25,8 @@ from xarm_lab.safety import enable_basic_safety, clear_faults
 from xarm_lab.kinematics import ik_from_pose
 from utils.plot import plot_3d_positions
 
+import matplotlib.pyplot as plt
+
 # -----------------------------
 # Load + flatten dataset
 # -----------------------------
@@ -82,6 +84,11 @@ def load_data_by_episode(path, H, test_frac=0.2, seed=0):
 
     X_train, Y_train = flatten(train_eps, H)
     X_test, Y_test   = flatten(test_eps, H)
+    # print(f"X_train: {X_train.shape}")
+    # print(f"X_test: {X_test.shape}")
+    # print(f"Y_train: {Y_train.shape}")
+    # print(f"Y_test: {Y_test.shape}")
+    # print(f"Y_test: {Y_test}")
 
     return X_train, Y_train, X_test, Y_test
     
@@ -203,6 +210,8 @@ def main():
     # TODO: compute (Y_mean, Y_std) from Ytr
     X_mean, X_std = compute_norm_stats(Xtr)  # TODO
     Y_mean, Y_std = compute_norm_stats(Ytr)  # TODO
+    print(f"X_mean {X_mean}")
+    print(f"X_std {X_std}")
 
     # TODO: normalize Xtr and Xte using X_mean/X_std
     # TODO: normalize Ytr and Yte using Y_mean/Y_std
@@ -230,6 +239,8 @@ def main():
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         loss_fn = nn.MSELoss()
 
+        train_mses = []
+        test_mses = []
         # Train
         for ep in range(1, args.epochs + 1):
             model.train()
@@ -251,6 +262,14 @@ def main():
                     f"Train MSE: {train_mse:.6f} | "
                     f"Test MSE: {test_mse:.6f}"
                 )
+                train_mses.append(train_mse.item())
+                test_mses.append(test_mse.item())
+        plt.plot([num*5 for num in range(len(train_mses))], train_mses, label="Train MSE")
+        plt.plot([num*5 for num in range(len(test_mses))], test_mses, label="Test MSE")
+        plt.xlabel("Epoch")
+        plt.ylabel("MSE")
+        plt.legend()
+        plt.savefig('BC Loss Curves')
 
         # Save model
         # TODO: save model weights to asset/bc_policy.pt
@@ -334,7 +353,7 @@ def main():
                     # - g = get_gripper_position(arm)
                     # - state = np.concatenate([q, [g]])  (or whatever your obs definition is)
                     # - eef_state = get_tcp_pose(arm)
-                    q = get_joint_angles(arm)          # TODO
+                    q = torch.tensor(get_joint_angles(arm))          # TODO
                     g = get_gripper_position(arm)          # TODO
                     state = np.concatenate([q,[g]])      # TODO
                     eef_state = get_tcp_pose(arm)  # TODO
@@ -368,14 +387,19 @@ def main():
                     # dg = ...
                     action = a_norm * Y_std + Y_mean
                     dq = action[:7]
-                    dg = action[-1] 
+                    dg = a_norm[-1] 
+                    print(f"q: {q}")
+                    print(f"dq: {dq}")
+                    print(f"g: {g}")
+                    print(f"dg: {dg}")
 
                     # ---- Execute ----
                     # TODO:
                     # arm.set_servo_angle(angle=(q + dq).tolist(), ...)
                     # arm.set_gripper_position(...)
-                    arm.set_servo_angle(angle=(q+dq).tolist(), speed=20.0, is_radian=True, wait=True)
-                    arm.set_gripper_position(pos=float(dg), speed=0.1, wait=True)
+                    arm.set_servo_angle(angle=(q+dq).tolist(), speed=0.5, is_radian=True, wait=False)
+                    dg = 800 if dg > 1.67 or dg < -3 else 150
+                    arm.set_gripper_position(pos=float(dg), speed=0.1, wait=False)
                     states.append(state)
                     actions.append(action)
                     eefs.append(eef_state)

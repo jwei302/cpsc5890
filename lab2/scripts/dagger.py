@@ -33,6 +33,7 @@ from utils.collect_demo_high_freq import policy
 # You can point this import at the student BC file if desired:
 from scripts.bc import *  # contains: load_data_by_episode, compute_norm_stats, normalize, BCPolicy, evaluate
 
+import matplotlib.pyplot as plt
 
 def train_bc_on_arrays(
     X_raw_train, Y_raw_train, X_raw_test, Y_raw_test,
@@ -74,6 +75,8 @@ def train_bc_on_arrays(
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)# TODO
     loss_fn = nn.MSELoss()    # TODO
 
+    test_mses = []
+    train_mses = []
     # TODO: training loop
     for ep in range(1, epochs+1):
         model.train()
@@ -87,6 +90,8 @@ def train_bc_on_arrays(
         if ep%5 == 0 or ep==1:
             train_mse = evaluate(model, train_loader, device)
             test_mse = evaluate(model, test_loader, device)
+            test_mses.append(test_mse.item())
+            train_mses.append(train_mse.item())
             print(
                 f"Epoch {ep:03d} | "
                 f"Train MSE: {train_mse:.6f} | "
@@ -95,7 +100,13 @@ def train_bc_on_arrays(
     #     ...
     #   optionally print evaluate() every few epochs
     # raise NotImplementedError
-
+    
+    plt.plot([num*5 for num in range(len(train_mses))], train_mses, label="Train MSE")
+    plt.plot([num*5 for num in range(len(test_mses))], test_mses, label="Test MSE")
+    plt.xlabel("Epoch")
+    plt.ylabel("MSE")
+    plt.legend()
+    plt.savefig('DAgger Loss Curves')
     return model, (X_mean, X_std, Y_mean, Y_std)
 
 
@@ -170,7 +181,12 @@ def rollout_dagger_collect(
             # IMPORTANT: label with expert for visited states
             # NOTE: policy(arm) returns (a_exp, done) in your code
             # TODO: call expert policy
-            a_exp, done = policy(arm)# TODO
+            while True:
+                try:
+                    a_exp, done = policy(arm)# TODO
+                    break
+                except RuntimeError:
+                    continue
 
             # TODO: store training pair
             X_new.append(obs_stack)
@@ -327,7 +343,7 @@ def main():
                     norm_stats=(X_mean, X_std, Y_mean, Y_std),
                     device=device, 
                     obs_horizon=args.obs_horizon,
-                    episodes=args.epsiodes, 
+                    episodes=args.episodes, 
                     beta=beta
                 )
                 Xtr_agg = np.concatenate((Xtr_agg, X_new))
@@ -351,7 +367,7 @@ def main():
 
         # TODO: load dagger policy weights (asset/dagger_policy.pt)
         # raise NotImplementedError
-        model.load_state_dict(torch.load("asset/dagger_policy.pt"), weights_only=True)
+        model.load_state_dict(torch.load("asset/dagger_policy.pt", weights_only=True))
 
         model.eval()
 
