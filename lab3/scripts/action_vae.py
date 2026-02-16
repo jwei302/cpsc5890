@@ -7,6 +7,7 @@ from robomimic.utils.tensor_utils import time_distributed
 from torch.distributions import Normal, kl_divergence
 
 from scripts.dataset import make_loaders
+from scripts.crop import _random_crop_bhchw, _center_crop_bhchw
 
 
 # -------------------------
@@ -262,6 +263,14 @@ class BCConvMLPPolicyLatent(nn.Module):
         - predict latent sequence
         """
         features = [obs_state]
+        if self.training:
+            crop = _random_crop_bhchw
+        else:
+            crop = _center_crop_bhchw
+        if obs_image is not None:
+            obs_image = crop(obs_image)
+        if obs_wrist_image is not None:
+            obs_wrist_image = crop(obs_wrist_image)
 
         if self.image_type == "both":
             external = time_distributed(obs_image, self.obs_encoder.obs_nets["external"], inputs_as_kwargs=False)
@@ -391,7 +400,7 @@ def main():
         help="train_vae: train action encoder | train_bc: train BC to predict latent | inference: run forward demo",
     )
 
-    p.add_argument("--data_dir", type=str, default="/home/austinfeng/Downloads/xarm_lift_data")
+    p.add_argument("--data_dir", type=str, default="/home/jwei302/Downloads/xarm_lift_data")
     p.add_argument("--obs_h", type=int, default=2)
     p.add_argument("--pred_h", type=int, default=16)
     p.add_argument("--batch_size", type=int, default=64)

@@ -5,7 +5,8 @@ import argparse
 from robomimic.models.obs_nets import ObservationEncoder
 from robomimic.utils.tensor_utils import time_distributed
 
-from scripts.dataset import make_loaders
+from dataset import make_loaders
+from crop import _random_crop_bhchw, _center_crop_bhchw
 
 
 # -------------------------
@@ -51,10 +52,12 @@ class ObservationVAE(nn.Module):
         self.img_feat_dim = img_feat_dim
 
         # Use provided encoder or build one
+        print(obs_encoder)
         if obs_encoder is None:
             self.obs_encoder = ObservationEncoder(feature_activation=nn.ReLU)
         else:
             self.obs_encoder = obs_encoder
+        print(self.obs_encoder)
 
         # Input dim: state + image features
         input_dim = obs_dim
@@ -362,7 +365,7 @@ def main():
         help="train_vae: train action encoder | train_bc: train BC to predict latent | inference: run forward demo",
     )
 
-    p.add_argument("--data_dir", type=str, default="/home/austinfeng/Downloads/xarm_lift_data")
+    p.add_argument("--data_dir", type=str, default="/home/jwei302/Downloads/xarm_lift_data")
     p.add_argument("--obs_h", type=int, default=2)
     p.add_argument("--pred_h", type=int, default=16)
     p.add_argument("--batch_size", type=int, default=64)
@@ -405,8 +408,9 @@ def main():
     # -----------------------------
     # build action encoder (AE or VAE)
     # -----------------------------
-    action_ae_kwargs = dict(action_dim=args.action_dim, z_dim=args.z_dim, hidden=args.ae_hidden)
-    action_ae = ObservationVAE(**action_ae_kwargs).to(device)
+    # action_ae_kwargs = dict(action_dim=args.action_dim, z_dim=args.z_dim, hidden=args.ae_hidden)
+    obs_ae_kwargs = dict(obs_dim=args.obs_dim, z_dim=args.z_dim, hidden=args.ae_hidden)
+    obs_vae = ObservationVAE(**obs_ae_kwargs).to(device)
 
     # -----------------------------
     # mode dispatch

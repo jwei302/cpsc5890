@@ -49,6 +49,8 @@ def main(args: Args):
 
     dt = 1.0 / args.hz
 
+    obs = env.step([])
+
     # RL-style loop
     obs = env.get_obs()
     t0 = time.time()
@@ -58,7 +60,11 @@ def main(args: Args):
             out = policy.step(obs)
             action = np.asarray(out.action, dtype=np.float32)
 
-            obs = env.step(action)
+            # do prediciton
+
+
+            for act in action[:act_horizon]:
+                obs = env.step(action)
 
             if args.print_every > 0 and (step % args.print_every == 0):
                 elapsed = time.time() - t0

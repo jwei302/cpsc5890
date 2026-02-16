@@ -47,3 +47,7 @@ class UniversalPolicy:
         action = joints.copy()  # safe default: hold
 
         return PolicyOut(action=action, info=None)
+    
+  #####
+  # In distribution starting state: 0, -0.8, 0, 0.8, 0, 1.0, 0, 0
+  # normalize observation, do prediction, unnormalize action

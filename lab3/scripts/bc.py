@@ -232,7 +232,7 @@ def save_model(path, model, stats, model_kwargs):
 if __name__ == "__main__":
 
     train_loader, test_loader, stats = make_loaders(
-        "/home/austinfeng/Downloads/xarm_lift_data",
+        "/home/jwei302/Downloads/xarm_lift_data",
         obs_h=1,
         pred_h=16,
         batch_size=64,
