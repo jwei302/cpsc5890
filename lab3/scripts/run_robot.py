@@ -27,6 +27,7 @@ class Args:
     mock: bool = False
     max_steps: int = 10_000
     print_every: int = 30  # steps
+    action_horizon: int = 16 # steps
 
 
 def main(args: Args):
@@ -49,7 +50,8 @@ def main(args: Args):
 
     dt = 1.0 / args.hz
 
-    obs = env.step([])
+    # initial hardcoded in distribution state
+    obs = env.step([0, -0.8, 0, 0.8, 0, 1.0, 0, 0])
 
     # RL-style loop
     obs = env.get_obs()
@@ -62,9 +64,9 @@ def main(args: Args):
 
             # do prediciton
 
-
-            for act in action[:act_horizon]:
-                obs = env.step(action)
+            for act in action[:args.action_horizon]:
+                obs = env.step(act)
+                time.sleep(dt)
 
             if args.print_every > 0 and (step % args.print_every == 0):
                 elapsed = time.time() - t0
