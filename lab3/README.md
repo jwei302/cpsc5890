@@ -1,5 +1,6 @@
 # Lab 3 — Visuomotor Policies, Action Embeddings, Autoencoders, and VAEs
 
+Completed by Jeffrey Wei, Austin Feng. NOTE: Jeffrey missed Lab 3 on February 6th, so we were granted one extra day by Professor Fitzgerald to complete the lab and lab report. 
 
 ## Objectives
 
@@ -58,7 +59,7 @@ to
 
 When do images actually help Behavior Cloning?
 
-A: Images help when not all the information can be found in the proprioception data, which include information about the object, possible occlusions. It also helps with exact scene geometry and more precise and dexterous navigations. 
+A: Images help when not all the information can be found in the state / joints data, which include information about the object, occlusions, and setting. It also helps with exact scene geometry and more precise and dexterous navigations. 
 
 Why is the image encoder applied independently at each timestep?
 
@@ -66,15 +67,15 @@ A: The image encoder is applied independently such that we can use the same set 
 
 Why can BatchNorm be problematic in image-based BC?
 
-A: 
+A: Image-based BC uses smaller batch sizes for behavior cloning because of GPU memory storage limitations during training. BatchNorm however, works best with larger batch sizes because there are more stable mean and variance across larger batch sizes. Smaller batch sizes yield mean and variances with high noise. This is why we switch to GroupNorm. 
 
 What are the risks of training an image encoder from scratch in BC?
 
-A: 
+A: Training an image encoder from scratch increases the likelihood for the encoder to overfit to the limited demos in the BC dataset. This causes the policy to rely less on the visual information due to overfitting and mostly rely on the states for action generation which yields poor OOD generalization. 
 
 How can you tell whether the policy is actually using visual information?
 
-A: 
+A: We can test this at inference time by adding perturbations or augmentations to `obs_image` or `obs_wrist_image` and keeping the state fixed and see if the policy operate very differently. If they do, then the policy is meaningfully interpreting the images. 
 ---
 
 ## Part 2 — Action Autoencoders
@@ -115,11 +116,21 @@ then a VAE becomes a regular AE.
 
 Create a **3×3 table**:
 
-| Latent Dim ↓ / Model Size → | Small | Medium | Large |
-|-----------------------------|-------|--------|-------|
-| Low dim                     |       |        |       |
-| Mid dim                     |       |        |       |
-| High dim                    |       |        |       |
+VAE Training Reconstruction Loss
+
+| Latent Dim (z_dim) / Hidden Size | 128 | 256 | 512 |
+|--------------------------------------|-----|-----|-----|
+| 8                                    | 0.001265 | 0.000822 | 0.000741 |
+| 16                                   | 0.001055 | 0.000740 | 0.000735 |
+| 32                                   | 0.000855 | 0.000648 | 0.000687 |
+
+VAE Validation Reconstruction Loss
+
+| Latent Dim (z_dim) / Hidden Size | 128 | 256 | 512 |
+|--------------------------------------|-----|-----|-----|
+| 4                                    | 0.002282 | 0.001864 | 0.001458 |
+| 16                                   | 0.002156 | 0.001566 | 0.001340 |
+| 32                                   | 0.001525 | 0.001301 | 0.001105 |
 
 Report:
 - Training reconstruction loss
@@ -128,8 +139,16 @@ Report:
 ### Questions
 
 - When does increasing latent size stop helping?
+
+A: In the latent dimensions that we tested, increasing the latent size has continually helped the validation loss. We suspect that if the latent dimension is too large however that there will be diminishing returns as there is little compression being done for the model to learn from reconstruction.  
+
 - Which model overfits?
+
+A: All the models overfit since all the training losses are significantly lower than their corresponding test loss. The clearest overfitting model is `hidden=128, z_dim=16`. 
+
 - What is the best latent dimension for reconstruction?
+
+A: The best latent dimension for reconstruction is `z_dim=32` because it has the lowest validation loss across different hidden dimensions. 
 
 Now BC predicts **latent actions** instead of raw actions:
 
@@ -144,10 +163,27 @@ Same 3×3 table, but report:
 - BC validation loss  
 - (Optional) task success rate  
 
+BC Training Loss (final epoch, `[BC->z 030]`)
+
+| Latent Dim (z_dim) ↓ / Hidden Size → | 128 | 256 | 512 |
+|--------------------------------------|-----|-----|-----|
+| 8                                    | 0.003992 | 0.004702 | 0.004295 |
+| 16                                   | 0.004333 | 0.004285 | 0.003775 |
+| 32                                   | 0.004667 | 0.003989 | 0.003882 |
+
+BC Testing Loss (final epoch, `[BC->z 030]`)
+
+| Latent Dim (z_dim) ↓ / Hidden Size → | 128 | 256 | 512 |
+|--------------------------------------|-----|-----|-----|
+| 8                                    | 0.077728 | 0.083724 | 0.084485 |
+| 16                                   | 0.072760 | 0.070459 | 0.065360 |
+| 32                                   | 0.070796 | 0.061343 | 0.060517 |
+
 ### Question
 
 Does lower VAE reconstruction loss → better BC performance?  
-Often **no** — reconstruction quality does not always align with control usefulness.
+
+A: Not necessarily because a VAE's econstruction quality does not necessarily imply control usefulness.
 
 ### Required Trials
 
