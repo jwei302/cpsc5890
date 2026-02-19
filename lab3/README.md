@@ -165,7 +165,7 @@ Same 3×3 table, but report:
 
 BC Training Loss (final epoch, `[BC->z 030]`)
 
-| Latent Dim (z_dim) ↓ / Hidden Size → | 128 | 256 | 512 |
+| Latent Dim (z_dim) / Hidden Size | 128 | 256 | 512 |
 |--------------------------------------|-----|-----|-----|
 | 8                                    | 0.003992 | 0.004702 | 0.004295 |
 | 16                                   | 0.004333 | 0.004285 | 0.003775 |
@@ -173,7 +173,7 @@ BC Training Loss (final epoch, `[BC->z 030]`)
 
 BC Testing Loss (final epoch, `[BC->z 030]`)
 
-| Latent Dim (z_dim) ↓ / Hidden Size → | 128 | 256 | 512 |
+| Latent Dim (z_dim) / Hidden Size | 128 | 256 | 512 |
 |--------------------------------------|-----|-----|-----|
 | 8                                    | 0.077728 | 0.083724 | 0.084485 |
 | 16                                   | 0.072760 | 0.070459 | 0.065360 |
