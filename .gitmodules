@@ -1,0 +1,3 @@
+[submodule "lab3/gello_software"]
+	path = lab3/gello_software
+	url = https://github.com/wuphilipp/gello_software
