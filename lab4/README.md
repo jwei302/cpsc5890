@@ -27,21 +27,19 @@ This builds intuition about:
 
 ---
 
-## 1. Define a Simple Noise Schedule
-
-Start with a basic cosine beta schedule:
-
-
-## 2. Add Noise to a Trajectory
-
-## 3. Visualize Noising Iterations
-
+## 1. Visualize Noising Iterations
+Add Noise to a Trajectory
 
 ```
 python -m scripts.ddpm --mode visual --config config/lift_cube.yaml
 ```
 
-## 4. Implement Two Additional Noise Schedules
+## 2. Define a Simple Noise Schedule
+
+Start with a basic cosine beta schedule:
+
+
+## 3. Implement Two Additional Noise Schedules
 
 In addition to linear, implement two more schedules.
 
