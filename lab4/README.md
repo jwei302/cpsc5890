@@ -29,49 +29,17 @@ This builds intuition about:
 
 ## 1. Define a Simple Noise Schedule
 
-Start with a basic linear beta schedule:
+Start with a basic cosine beta schedule:
 
-βₜ ∈ [β_min, β_max]
-
-Implement:
-
-- A beta schedule
-- Compute:
-  - αₜ = 1 − βₜ
-  - cumulative product ᾱₜ
-
----
 
 ## 2. Add Noise to a Trajectory
 
-Given a clean trajectory:
-
-x₀
-
-Implement the forward process:
-
-xₜ = √(ᾱₜ) x₀ + √(1 − ᾱₜ) ε
-
-Where:
-- ε ~ N(0, I)
-
----
-
 ## 3. Visualize Noising Iterations
 
-For a fixed trajectory:
 
-- Visualize:
-  - t = 0
-  - early steps
-  - mid steps
-  - final step
-
-Observe:
-- When does structure disappear?
-- Does it become fully Gaussian?
-
----
+```
+python -m scripts.ddpm --mode visual --config config/lift_cube.yaml
+```
 
 ## 4. Implement Two Additional Noise Schedules
 
@@ -161,6 +129,10 @@ Check:
 
 ## 3. Train With Different Configurations
 
+```
+python -m scripts.ddpm --mode train --config config/lift_cube.yaml
+```
+
 Vary:
 
 - Number of denoising steps
@@ -197,6 +169,10 @@ Discuss:
 # Part 3 — Sampling
 
 Now generate trajectories.
+
+```
+python -m scripts.ddpm --mode inf --config config/lift_cube.yaml
+```
 
 ---
 
