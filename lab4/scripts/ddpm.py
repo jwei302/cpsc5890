@@ -488,6 +488,7 @@ class DiffusionPolicyTrainer:
                                 #   - If your model expects timesteps shape [B], you may need to expand k to [B]
                                 #
                                 # YOUR CODE HERE
+                                # https://huggingface.co/docs/diffusers/v0.26.2/api/schedulers/ddpm#diffusers.DDPMScheduler.step
                                 raise NotImplementedError
 
                         ema.restore(self.model.parameters())  # restore original weights
@@ -762,11 +763,40 @@ def main():
 
         for t in timesteps:
             t_batch = torch.full((1,), t, device=device, dtype=torch.long)
-            noisy = trainer.noise_scheduler.add_noise(
-                act.unsqueeze(0),      # (1, H, D)
-                noise.unsqueeze(0),    # (1, H, D)
-                t_batch,
-            )
+
+            # ============================================================
+            # TODO: Apply forward diffusion (add noise to clean action)
+            # ============================================================
+            # Goal:
+            #   Generate x_t from clean action x_0 using the forward diffusion process:
+            #
+            #       x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * ε
+            #
+            #   Instead of implementing the formula manually, use:
+            #       noise_scheduler.add_noise(...)
+            #
+            # Inputs:
+            #   act:    [H, D]             clean action sequence (x_0)
+            #   noise:  [H, D]             sampled Gaussian noise (ε)
+            #   t_batch: [1] or [B]        diffusion timestep(s)
+            #
+            # Why unsqueeze(0)?
+            #   The scheduler expects batched input:
+            #       [B, H, D]
+            #   So we add a batch dimension → (1, H, D)
+            #
+            # Output:
+            #   noisy: [1, H, D]   noisy action sequence (x_t)
+            #
+            # Important:
+            #   - All tensors must be on the same device
+            #   - t_batch must match batch size (here B=1)
+            #   - add_noise uses the scheduler’s internal alpha schedule
+            #
+            # YOUR CODE HERE
+            # https://huggingface.co/docs/diffusers/v0.26.2/en/api/schedulers/ddpm#diffusers.DDPMScheduler.add_noise
+            raise NotImplementedError
+
             noisy_actions.append(noisy[0].detach().cpu())
 
         # --------------------------------------------------
