@@ -1,0 +1,7 @@
+ROBOMIMIC WARNING(
+    No private macro file found!
+    It is recommended to use a private macro file
+    To setup, run: python /home/jwei302/.local/lib/python3.10/site-packages/robomimic/scripts/setup_macros.py
+)
+Z 256
+hidden 256

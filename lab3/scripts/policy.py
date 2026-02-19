@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import numpy as np
-from bc import BCConvMLPPolicy
-from action_vae import BCConvMLPPolicyLatent, ActionVAE 
-from crop import _center_crop_bhchw
+from scripts.bc import BCConvMLPPolicy
+from scripts.action_vae import BCConvMLPPolicyLatent, ActionVAE 
+from scripts.crop import _center_crop_bhchw
 from collections import deque
 import os
 import torch
@@ -31,22 +31,40 @@ class UniversalPolicy:
         # TODO: load model, init buffers, etc.
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.use_latent = True
+        self.use_latent = False
 
         if self.use_latent:
             print("Using VAE policy")
             # VAE Policy
-            ckpt_path = os.environ.get("asset/checkpoints/bcconv_latent_final.pt")
+            # print("scripts/asset/checkpoints/bcconv_latent_final_{8}_{128}.pt")
+            # ckpt_path = os.environ.get("asset/checkpoints/bcconv_latent_final_{8}_{128}.pt")
+            # print(ckpt_path)
+            ckpt_path = "scripts/asset/checkpoints/bcconv_latent_final_{8}_{128}.pt"
+            ckpt_path = os.path.join(os.getcwd(), ckpt_path)
             ckpt = torch.load(ckpt_path, map_location=self.device, weights_only=False)
-            self.model = BCConvMLPPolicyLatent(**ckpt["model_kwargs"]).to(self.device)
-            self.model.load_state_dict(ckpt["model_state_dict"])    
+            # print(ckpt.keys())
+            self.model = ActionVAE(**ckpt["action_ae_kwargs"]).to(self.device)
+            self.model.load_state_dict(ckpt["action_ae_state_dict"])    
         else:
             print("Using BC policy")
             # BC Policy 
-            ckpt_path = os.environ.get("asset/checkpoints/bcconv_final.pt")
+            ckpt_path = "scripts/bc_asset/checkpoints/bcconv_latent_final_{8}_{128}.pt"
+            ckpt_path = os.path.join(os.getcwd(), ckpt_path)
             ckpt = torch.load(ckpt_path, map_location=self.device, weights_only=False)
-            self.model = BCConvMLPPolicy(**ckpt["model_kwargs"]).to(self.device)
-            self.model.load_state_dict(ckpt["model_state_dict"])
+            new_dict = ckpt["policy_kwargs"]
+            del new_dict["z_dim"]
+            self.model = BCConvMLPPolicy(**ckpt["policy_kwargs"]).to(self.device)
+            # self.model.load_state_dict(ckpt["policy_state_dict"])
+            state_dict = ckpt["policy_state_dict"]
+            new_state_dict = {}
+
+            for k, v in state_dict.items():
+                # Convert old keys to new keys
+                new_key = k.replace("net.0.", "conv.").replace("net.1.", "norm.")
+                new_state_dict[new_key] = v
+
+            self.model.load_state_dict(new_state_dict)
+
 
 
         self.model.eval()

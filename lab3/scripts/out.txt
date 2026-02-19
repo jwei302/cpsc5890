@@ -1,0 +1,3 @@
+Running with z_dim=8 and ae_hidden=128
+Running with z_dim=8 and ae_hidden=256
+Running with z_dim=8 and ae_hidden=512

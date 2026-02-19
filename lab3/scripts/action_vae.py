@@ -50,6 +50,8 @@ class ActionVAE(nn.Module):
         super().__init__()
         self.action_dim = action_dim
         self.z_dim = z_dim
+        print(f"Z {z_dim}")
+        print(f"hidden {hidden}")
 
         self.enc = nn.Sequential(
             nn.Linear(action_dim, hidden),
@@ -281,7 +283,9 @@ class BCConvMLPPolicyLatent(nn.Module):
         x = x.transpose(1,2)
         x = self.temporal(x).mean(dim=-1)
         out = self.head(x)
-        return out.view(x.shape[0], self.pred_horizon, self.action_dim)
+
+
+        return out.view(x.shape[0], self.pred_horizon, self.z_dim)
 
 
 def train_bc_to_latent(policy, action_ae, train_loader, test_loader, device="cuda", lr=1e-4, wd=1e-6, epochs=30):
@@ -353,6 +357,7 @@ def train_bc_to_latent(policy, action_ae, train_loader, test_loader, device="cud
 
         te /= max(n, 1)
         print(f"[BC->z {ep:03d}] train_mse={tr:.6f}  test_mse={te:.6f}")
+        # assert False
 
 
 # -------------------------
@@ -437,7 +442,6 @@ def main():
         test_ratio=args.test_ratio,
         num_workers=args.num_workers,
     )
-
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # -----------------------------
@@ -509,7 +513,7 @@ def main():
                 "policy_kwargs": policy_kwargs,
                 "action_ae_kwargs": action_ae_kwargs,
             },
-            args.ckpt_path,
+            "bc_"+args.ckpt_path,
         )
         print(f"Saved combined checkpoint to: {args.ckpt_path}")
 

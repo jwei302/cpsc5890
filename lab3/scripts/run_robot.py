@@ -11,7 +11,7 @@ from gello.robots.robot import PrintRobot
 from gello.zmq_core.robot_node import ZMQClientRobot
 from gello.zmq_core.camera_node import ZMQClientCamera
 
-from policy import UniversalPolicy
+from scripts.policy import UniversalPolicy
 
 
 @dataclass
@@ -58,7 +58,9 @@ def main(args: Args):
     t0 = time.time()
 
     try:
+        print("try")
         for step in range(args.max_steps):
+            print(step)
             out = policy.step(obs)
             action = np.asarray(out.action, dtype=np.float32)
 

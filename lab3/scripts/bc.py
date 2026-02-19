@@ -126,7 +126,7 @@ class BCConvMLPPolicy(nn.Module):
         """
         TODO:
         - encode visual observations (if enabled), use "time_distributed" function from robomimic
-        - concatenate state + image features per timestep
+        - concatenate state + image features per timestepaction_dim
         """
         
         #observation encoder to encode image

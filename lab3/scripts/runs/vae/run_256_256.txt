@@ -1,0 +1,58 @@
+ROBOMIMIC WARNING(
+    No private macro file found!
+    It is recommended to use a private macro file
+    To setup, run: python /home/jwei302/.local/lib/python3.10/site-packages/robomimic/scripts/setup_macros.py
+)
+Z 256
+hidden 256
+[VAE 001] train loss=0.097641 recon=0.096957 kl=0.684278 | test loss=0.013089 recon=0.012018 kl=1.070747
+[VAE 002] train loss=0.006783 recon=0.005318 kl=1.464556 | test loss=0.006544 recon=0.005006 kl=1.538789
+[VAE 003] train loss=0.004012 recon=0.002180 kl=1.832487 | test loss=0.004141 recon=0.002344 kl=1.797251
+[VAE 004] train loss=0.003357 recon=0.001320 kl=2.036505 | test loss=0.003626 recon=0.001688 kl=1.938693
+[VAE 005] train loss=0.003148 recon=0.001005 kl=2.143192 | test loss=0.003522 recon=0.001510 kl=2.012522
+[VAE 006] train loss=0.003052 recon=0.000858 kl=2.193972 | test loss=0.003400 recon=0.001357 kl=2.043183
+[VAE 007] train loss=0.002965 recon=0.000757 kl=2.208158 | test loss=0.003306 recon=0.001258 kl=2.048696
+[VAE 008] train loss=0.002937 recon=0.000736 kl=2.200204 | test loss=0.003209 recon=0.001173 kl=2.036608
+[VAE 009] train loss=0.002872 recon=0.000690 kl=2.181553 | test loss=0.003162 recon=0.001148 kl=2.014695
+[VAE 010] train loss=0.002856 recon=0.000705 kl=2.150458 | test loss=0.003116 recon=0.001132 kl=1.983677
+[VAE 011] train loss=0.002843 recon=0.000729 kl=2.113846 | test loss=0.003063 recon=0.001112 kl=1.950745
+[VAE 012] train loss=0.002785 recon=0.000711 kl=2.074599 | test loss=0.002968 recon=0.001054 kl=1.914401
+[VAE 013] train loss=0.002717 recon=0.000687 kl=2.029522 | test loss=0.003077 recon=0.001202 kl=1.874629
+[VAE 014] train loss=0.002708 recon=0.000725 kl=1.983713 | test loss=0.002884 recon=0.001056 kl=1.827966
+[VAE 015] train loss=0.002698 recon=0.000766 kl=1.931307 | test loss=0.002966 recon=0.001188 kl=1.778007
+[VAE 016] train loss=0.002650 recon=0.000775 kl=1.875075 | test loss=0.002760 recon=0.001032 kl=1.728232
+[VAE 017] train loss=0.002510 recon=0.000690 kl=1.820366 | test loss=0.002680 recon=0.001004 kl=1.676334
+[VAE 018] train loss=0.002489 recon=0.000730 kl=1.758817 | test loss=0.002735 recon=0.001117 kl=1.617875
+[VAE 019] train loss=0.002647 recon=0.000952 kl=1.694157 | test loss=0.002568 recon=0.001010 kl=1.557745
+[VAE 020] train loss=0.002442 recon=0.000811 kl=1.630582 | test loss=0.002553 recon=0.001051 kl=1.501735
+[VAE 021] train loss=0.002253 recon=0.000683 kl=1.569745 | test loss=0.002434 recon=0.000989 kl=1.445245
+[VAE 022] train loss=0.002264 recon=0.000757 kl=1.507252 | test loss=0.002387 recon=0.001001 kl=1.386517
+[VAE 023] train loss=0.002171 recon=0.000727 kl=1.444561 | test loss=0.002260 recon=0.000929 kl=1.331031
+[VAE 024] train loss=0.002145 recon=0.000758 kl=1.386404 | test loss=0.002298 recon=0.001024 kl=1.273807
+[VAE 025] train loss=0.001985 recon=0.000656 kl=1.328295 | test loss=0.002082 recon=0.000858 kl=1.223869
+[VAE 026] train loss=0.001970 recon=0.000696 kl=1.273805 | test loss=0.002234 recon=0.001059 kl=1.174301
+[VAE 027] train loss=0.002016 recon=0.000792 kl=1.223290 | test loss=0.002097 recon=0.000967 kl=1.129747
+[VAE 028] train loss=0.001825 recon=0.000649 kl=1.176042 | test loss=0.001861 recon=0.000772 kl=1.089193
+[VAE 029] train loss=0.001668 recon=0.000535 kl=1.133556 | test loss=0.001801 recon=0.000750 kl=1.051073
+[VAE 030] train loss=0.001676 recon=0.000584 kl=1.092714 | test loss=0.001744 recon=0.000730 kl=1.014492
+[VAE 031] train loss=0.001661 recon=0.000605 kl=1.056168 | test loss=0.001813 recon=0.000829 kl=0.983632
+[VAE 032] train loss=0.001545 recon=0.000522 kl=1.022668 | test loss=0.001623 recon=0.000668 kl=0.954518
+[VAE 033] train loss=0.001529 recon=0.000537 kl=0.991617 | test loss=0.001628 recon=0.000704 kl=0.924696
+[VAE 034] train loss=0.001673 recon=0.000711 kl=0.962179 | test loss=0.001584 recon=0.000686 kl=0.897351
+[VAE 035] train loss=0.001408 recon=0.000476 kl=0.932359 | test loss=0.001536 recon=0.000663 kl=0.873066
+[VAE 036] train loss=0.001317 recon=0.000411 kl=0.906155 | test loss=0.001367 recon=0.000517 kl=0.849834
+[VAE 037] train loss=0.001380 recon=0.000497 kl=0.883552 | test loss=0.001455 recon=0.000624 kl=0.830846
+[VAE 038] train loss=0.001251 recon=0.000390 kl=0.861467 | test loss=0.001293 recon=0.000485 kl=0.808354
+[VAE 039] train loss=0.001182 recon=0.000343 kl=0.838774 | test loss=0.001292 recon=0.000502 kl=0.790198
+[VAE 040] train loss=0.001189 recon=0.000368 kl=0.820326 | test loss=0.001352 recon=0.000579 kl=0.773537
+[VAE 041] train loss=0.001357 recon=0.000553 kl=0.803781 | test loss=0.001347 recon=0.000589 kl=0.758031
+[VAE 042] train loss=0.001173 recon=0.000387 kl=0.785999 | test loss=0.001180 recon=0.000438 kl=0.741301
+[VAE 043] train loss=0.001104 recon=0.000336 kl=0.768266 | test loss=0.001326 recon=0.000600 kl=0.726401
+[VAE 044] train loss=0.001105 recon=0.000350 kl=0.755265 | test loss=0.001189 recon=0.000475 kl=0.713548
+[VAE 045] train loss=0.001102 recon=0.000360 kl=0.741504 | test loss=0.001425 recon=0.000722 kl=0.703079
+[VAE 046] train loss=0.001310 recon=0.000579 kl=0.730483 | test loss=0.001419 recon=0.000727 kl=0.692320
+[VAE 047] train loss=0.001070 recon=0.000353 kl=0.716723 | test loss=0.001061 recon=0.000382 kl=0.678282
+[VAE 048] train loss=0.000939 recon=0.000237 kl=0.702416 | test loss=0.001074 recon=0.000406 kl=0.667436
+[VAE 049] train loss=0.000958 recon=0.000264 kl=0.693017 | test loss=0.001026 recon=0.000366 kl=0.660048
+[VAE 050] train loss=0.000974 recon=0.000291 kl=0.683309 | test loss=0.001016 recon=0.000365 kl=0.651669
+Saved AE-only checkpoint to: asset/checkpoints/bcconv_latent_final.pt

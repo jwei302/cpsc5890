@@ -1,0 +1,38 @@
+ROBOMIMIC WARNING(
+    No private macro file found!
+    It is recommended to use a private macro file
+    To setup, run: python /home/jwei302/.local/lib/python3.10/site-packages/robomimic/scripts/setup_macros.py
+)
+Z 8
+hidden 256
+[BC->z 001] train_mse=0.461677  test_mse=0.144572
+[BC->z 002] train_mse=0.092126  test_mse=0.108921
+[BC->z 003] train_mse=0.048990  test_mse=0.093025
+[BC->z 004] train_mse=0.032506  test_mse=0.090171
+[BC->z 005] train_mse=0.024933  test_mse=0.090942
+[BC->z 006] train_mse=0.019780  test_mse=0.088065
+[BC->z 007] train_mse=0.016797  test_mse=0.089500
+[BC->z 008] train_mse=0.014938  test_mse=0.088289
+[BC->z 009] train_mse=0.013337  test_mse=0.085954
+[BC->z 010] train_mse=0.011567  test_mse=0.088052
+[BC->z 011] train_mse=0.010241  test_mse=0.085394
+[BC->z 012] train_mse=0.009193  test_mse=0.082413
+[BC->z 013] train_mse=0.008690  test_mse=0.087298
+[BC->z 014] train_mse=0.008362  test_mse=0.086300
+[BC->z 015] train_mse=0.008639  test_mse=0.085355
+[BC->z 016] train_mse=0.007284  test_mse=0.084737
+[BC->z 017] train_mse=0.006377  test_mse=0.086293
+[BC->z 018] train_mse=0.006049  test_mse=0.084270
+[BC->z 019] train_mse=0.005815  test_mse=0.083458
+[BC->z 020] train_mse=0.005466  test_mse=0.082054
+[BC->z 021] train_mse=0.005394  test_mse=0.084669
+[BC->z 022] train_mse=0.005267  test_mse=0.084403
+[BC->z 023] train_mse=0.005029  test_mse=0.083760
+[BC->z 024] train_mse=0.004809  test_mse=0.082092
+[BC->z 025] train_mse=0.004534  test_mse=0.083804
+[BC->z 026] train_mse=0.004326  test_mse=0.081516
+[BC->z 027] train_mse=0.003979  test_mse=0.081451
+[BC->z 028] train_mse=0.004033  test_mse=0.086126
+[BC->z 029] train_mse=0.004210  test_mse=0.082492
+[BC->z 030] train_mse=0.004702  test_mse=0.083724
+Saved combined checkpoint to: asset/checkpoints/bcconv_latent_final_{8}_{256}.pt
