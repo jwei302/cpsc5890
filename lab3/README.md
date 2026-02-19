@@ -163,7 +163,7 @@ Same 3×3 table, but report:
 - BC validation loss  
 - (Optional) task success rate  
 
-BC Training Loss (final epoch, `[BC->z 030]`)
+BC Training Loss
 
 | Latent Dim (z_dim) / Hidden Size | 128 | 256 | 512 |
 |--------------------------------------|-----|-----|-----|
@@ -171,7 +171,7 @@ BC Training Loss (final epoch, `[BC->z 030]`)
 | 16                                   | 0.004333 | 0.004285 | 0.003775 |
 | 32                                   | 0.004667 | 0.003989 | 0.003882 |
 
-BC Testing Loss (final epoch, `[BC->z 030]`)
+BC Testing Loss
 
 | Latent Dim (z_dim) / Hidden Size | 128 | 256 | 512 |
 |--------------------------------------|-----|-----|-----|
