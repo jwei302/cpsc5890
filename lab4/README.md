@@ -15,6 +15,11 @@ By the end of this lab, you will:
 
 ---
 
+# Part 0 — Installation
+```
+conda env create -f lab4.yml
+```
+
 # Part 1 — Forward Process
 
 In this section, you will study how trajectories are progressively corrupted by noise.
