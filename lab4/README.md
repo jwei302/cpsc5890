@@ -15,6 +15,7 @@ By the end of this lab, you will:
 
 ---
 
+
 # Part 0 — Installation
 ```
 conda env create -f lab4.yml
@@ -43,13 +44,12 @@ python -m scripts.ddpm --mode visual --config config/lift_cube.yaml
 
 Start with a basic cosine beta schedule:
 
-
 ## 3. Implement Two Additional Noise Schedules
 
-In addition to linear, implement two more schedules.
+In addition to cosine, implement two more schedules.
 
 Examples:
-- Cosine schedule
+- linear schedule
 - Quadratic schedule
 - Sigmoid schedule
 - Exponential schedule
@@ -267,6 +267,16 @@ videos/
 run1.mp4
 run2.mp4
 run3.mp4
+
+
+
+---
+
+# Debugging
+
+If you run out of RAM, try closing down Windows (browser, VS code) to save memory. Try set DataLoader ```num_workers``` to 0 and gradually increase it.
+You can slice this list ```episode_files = _list_episode_files(data_dir)``` to allow for faster data loading when testing code. 
+
 
 
 ---
