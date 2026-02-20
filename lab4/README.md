@@ -275,7 +275,8 @@ run3.mp4
 # Debugging
 
 If you run out of RAM, try closing down Windows (browser, VS code) to save memory. Try set DataLoader ```num_workers``` to 0 and gradually increase it.
-You can slice this list ```episode_files = _list_episode_files(data_dir)``` to allow for faster data loading when testing code. 
+
+You can slice this list ```episode_files = _list_episode_files(data_dir)``` in `scripts/dataset.py` to enable faster data loading when testing code. 
 
 
 
