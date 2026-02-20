@@ -144,7 +144,7 @@ A: In the latent dimensions that we tested, increasing the latent size has conti
 
 - Which model overfits?
 
-A: All the models overfit since all the training losses are significantly lower than their corresponding test loss. The clearest overfitting model is `hidden=128, z_dim=16`. 
+A: All the models overfit since all the training losses are significantly lower than their corresponding test loss.
 
 - What is the best latent dimension for reconstruction?
 
