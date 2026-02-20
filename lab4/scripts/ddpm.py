@@ -9,6 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from typing import Optional, Tuple, Dict
 import matplotlib.pyplot as plt
+import math
 
 
 import torch
@@ -264,8 +265,14 @@ class DiffusionPolicyTrainer:
         #
         # YOUR CODE HERE
         # https://github.com/huggingface/diffusers/blob/main/src/diffusers/optimization.py#L288
+        n_steps = len(train_loader) * num_epochs
         
-
+        lr_scheduler = get_scheduler(
+            name="cosine",
+            optimizer=optimizer,
+            num_warmup_steps=n_steps // 20
+            num_training_steps=n_steps
+        )
         # ============================================================
         # TODO: Initialize diffusion timestep schedule
         # ============================================================
@@ -292,7 +299,8 @@ class DiffusionPolicyTrainer:
         #
         # YOUR CODE HERE
         # https://huggingface.co/docs/diffusers/v0.26.2/api/schedulers/ddpm#diffusers.DDPMScheduler.set_timesteps
-        raise NotImplementedError
+        self.noise_scheduler.set_timestamps(num_diffusion_steps)
+
 
         with tqdm(range(num_epochs), desc='Epoch', leave=True) as tglobal:
             for epoch_idx in tglobal:
@@ -362,8 +370,20 @@ class DiffusionPolicyTrainer:
                             #   - if using AMP/GradScaler, these lines change
                             #   - lr_scheduler.step() is per optimizer step (not per epoch)
                             #
-                            # YOUR CODE HERE
-                            raise NotImplementedError
+                        # YOUR CODE HERE
+                        B = naction.shape[0]
+                        true_noise = torch.randn(naction.shape).to(self.device)
+                        timesteps=torch.randint(0, num_train_timesteps, B).to(self.device)
+                        noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
+                        if "img_ext" not in obs: obs["img_ext"] = None
+                        if "img_wst" not in obs: obs["img_wst"] = None
+                        pred_noise = self.model(noisy_actions, timesteps, observations=nobs, img_ext=obs["img_ext"], img_wst=obs["img_wst"])
+                        loss = nn.functional.mse_loss(pred_noise, true_noise)
+                        loss.backward()
+                        optimizer.step()
+                        lr_scheduler.step()
+                        optimizer.zero_grad()
+                        ema.step(self.model.parameters())
 
                         # logging
                         loss_cpu = loss.item()
@@ -440,7 +460,17 @@ class DiffusionPolicyTrainer:
                                 #   - Use .item() to store python floats (not tensors) in val_loss
                                 #
                                 # YOUR CODE HERE
-                                raise NotImplementedError
+                                with torch.no_grad():
+                                    B = naction.shape[0]
+                                    true_noise = torch.randn(naction.shape).to(self.device)
+                                    timesteps=torch.randint(0, num_train_timesteps, B).to(self.device)
+                                    noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
+                                    if "img_ext" not in obs: obs["img_ext"] = None
+                                    if "img_wst" not in obs: obs["img_wst"] = None
+                                    pred_noise = self.model(noisy_actions, timesteps, observations=nobs, img_ext=obs["img_ext"], img_wst=obs["img_wst"])
+                                    loss = nn.functional.mse_loss(pred_noise, true_noise)
+                                    val_loss.append(loss.item())
+                                    avg_val_loss = mean(val_loss)
 
                                 # ============================================================
                                 # TODO: Diffusion sampling loop (reverse process) + action-space evaluation
@@ -609,7 +639,7 @@ def main():
         # init scheduler
         trainer.ddim_scheduler.set_timesteps(args["num_inference_steps"])
         vis = args.get("denoise_vis", {})
-        vis_enabled = bool(vis.get("enabled", False))
+        vis_enabled = bool(vis.get("enabled", False))cosine
 
         while True:
             # --------------------------------------------------
