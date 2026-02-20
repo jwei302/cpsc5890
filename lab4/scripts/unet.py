@@ -326,24 +326,22 @@ class DiffusionPolicyUNet1D(nn.Module):
         # Concatenate along last dim.
         #
         # YOUR CODE HERE
+        obs_list = []
+
         if "external" in observations and observations["external"] is not None:
-            ext_feat = time_distributed(observations["external"], self.obs_encoder.obs_nets["external"])
+            ext_feat = time_distributed(observations["external"], 
+                                        self.obs_encoder.obs_nets["external"], inputs_as_kwargs= False)
+            obs_list.append(ext_feat)
         if "wrist" in observations and observations["wrist"] is not None:
-            wst_feat = time_distributed(observations["wrist"], self.obs_encoder.obs_nets["wrist"])
+            wst_feat = time_distributed(observations["wrist"], 
+                                        self.obs_encoder.obs_nets["wrist"], inputs_as_kwargs= False)
+            obs_list.append(wst_feat)
         if "low_dim_obs" in observations and observations["low_dim_obs"] is not None:
             low_dim_obs = observations["low_dim_obs"]
             if low_dim_obs.dim() == 2:
-                low_dim_obs = low_dim_obs.unsqueeze(1).expand(B, self.obs_horizon, -1)
-            low_dim_feat = self.obs_encoder.obs_nets["low_dim_obs"](low_dim_obs)
+                low_dim_obs = low_dim_obs.unsqueeze(1).expand(-1, self.obs_horizon, -1)
+            obs_list.append(low_dim_obs)
 
-        obs_list = []
-       
-        if "external" in observations and observations["external"] is not None:
-            obs_list.append(ext_feat)
-        if "wrist" in observations and observations["wrist"] is not None:
-            obs_list.append(wst_feat)
-        if "low_dim_obs" in observations and observations["low_dim_obs"] is not None:
-            obs_list.append(low_dim_feat)
 
         obs_enc = torch.cat(obs_list, dim=-1)
 
@@ -417,7 +415,7 @@ class DiffusionPolicyUNet1D(nn.Module):
         # Map UNet channels → action_dim channels
         #
         # YOUR CODE HERE
-        x = self.final_proj(x)
+        x = self.final_conv(x)
         predicted_noise = x.transpose(1, 2)
         return predicted_noise
 
@@ -567,6 +565,7 @@ class DiffusionPolicyUNet(nn.Module):
             img_ext = crop(img_ext)
         if img_wst is not None:
             img_wst = crop(img_wst)
+        # print("IMG", img_ext.shape)
 
         obs_dict = {}
         if img_ext is not None:

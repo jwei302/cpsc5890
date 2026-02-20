@@ -215,8 +215,8 @@ class DiffusionPolicyTrainer:
                 model_name=None,
                 checkpoint_interval = 10):
 
-        train_loader = DataLoader(self.train_ds, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=16, pin_memory=True)
-        val_loader   = DataLoader(self.val_ds,   batch_size=batch_size, shuffle=False, drop_last=False, num_workers=16, pin_memory=True)
+        train_loader = DataLoader(self.train_ds, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=0, pin_memory=False)
+        val_loader   = DataLoader(self.val_ds,   batch_size=batch_size, shuffle=False, drop_last=False, num_workers=0, pin_memory=False)
 
         # Create directory for logging
         os.makedirs("asset/training", exist_ok=True)
@@ -380,7 +380,7 @@ class DiffusionPolicyTrainer:
                                     device = self.device,
                                     dtype = torch.long
                                 )
-                        noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
+                        noisy_actions = self.noise_scheduler.add_noise(naction, true_noise, timesteps)
                         if "img_ext" not in obs: obs["img_ext"] = None
                         if "img_wst" not in obs: obs["img_wst"] = None
                         pred_noise = self.model(noisy_actions, timesteps, observations=obs["obs"], img_ext=obs["img_ext"], img_wst=obs["img_wst"])
