@@ -289,8 +289,7 @@ class DiffusionPolicyUNet1D(nn.Module):
         #   1D conv expects channels-first format.
         #
         # YOUR CODE HERE
-        raise NotImplementedError
-
+        sample = noisy_actions.permute(0, 2, 1)
 
         # ============================================================
         # TODO 2: Standardize timesteps
@@ -298,7 +297,7 @@ class DiffusionPolicyUNet1D(nn.Module):
         if not torch.is_tensor(timesteps):
             timesteps = torch.tensor([timesteps], dtype=torch.long, device=sample.device)
         elif timesteps.dim() == 0:
-            timesteps = timesteps.unsqueeze(0).to(sample.device)
+            timesteps = timesteps.unsqueeze(0).to(noisy_actions.device)
         timesteps = timesteps.expand(B)
 
         # ============================================================
@@ -307,8 +306,8 @@ class DiffusionPolicyUNet1D(nn.Module):
         # Map timesteps [B] → t_feat [B, t_dim]
         #
         # YOUR CODE HERE
-        raise NotImplementedError
-
+        t_feat = self.diffusion_step_encoder(timesteps)
+         
 
         # ============================================================
         # TODO 4: Encode observation streams
@@ -327,8 +326,26 @@ class DiffusionPolicyUNet1D(nn.Module):
         # Concatenate along last dim.
         #
         # YOUR CODE HERE
-        raise NotImplementedError
+        if "external" in observations and observations["external"] is not None:
+            ext_feat = time_distributed(observations["external"], self.obs_encoder.obs_nets["external"])
+        if "wrist" in observations and observations["wrist"] is not None:
+            wst_feat = time_distributed(observations["wrist"], self.obs_encoder.obs_nets["wrist"])
+        if "low_dim_obs" in observations and observations["low_dim_obs"] is not None:
+            low_dim_obs = observations["low_dim_obs"]
+            if low_dim_obs.dim() == 2:
+                low_dim_obs = low_dim_obs.unsqueeze(1).expand(B, self.obs_horizon, -1)
+            low_dim_feat = self.obs_encoder.obs_nets["low_dim_obs"](low_dim_obs)
 
+        obs_list = []
+       
+        if "external" in observations and observations["external"] is not None:
+            obs_list.append(ext_feat)
+        if "wrist" in observations and observations["wrist"] is not None:
+            obs_list.append(wst_feat)
+        if "low_dim_obs" in observations and observations["low_dim_obs"] is not None:
+            obs_list.append(low_dim_feat)
+
+        obs_enc = torch.cat(obs_list, dim=-1)
 
         # ============================================================
         # TODO 5: Flatten observation encoding
@@ -358,7 +375,11 @@ class DiffusionPolicyUNet1D(nn.Module):
         #   x = down(x)
         #
         # YOUR CODE HERE
-        raise NotImplementedError
+        for res1, res2, down in self.down_modules:
+            x = res1(x, cond)
+            x = res2(x, cond)
+            h.append(x)
+            x = down(x)
 
 
         # ============================================================
@@ -368,7 +389,8 @@ class DiffusionPolicyUNet1D(nn.Module):
         #   x = mid(x, cond)
         #
         # YOUR CODE HERE
-        raise NotImplementedError
+        for mid in self.mid_modules:
+            x = mid(x, cond)
 
 
         # ============================================================
@@ -381,7 +403,12 @@ class DiffusionPolicyUNet1D(nn.Module):
         #   upsample
         #
         # YOUR CODE HERE
-        raise NotImplementedError
+        for res1, res2, up in self.up_modules:
+            skip = h.pop()
+            x = torch.cat([x, skip], dim=1)
+            x = res1(x, cond)
+            x = res2(x, cond)
+            x = up(x)
 
 
         # ============================================================
@@ -390,13 +417,8 @@ class DiffusionPolicyUNet1D(nn.Module):
         # Map UNet channels → action_dim channels
         #
         # YOUR CODE HERE
-        raise NotImplementedError
-
-
-        # ============================================================
-        # TODO 12: Restore original tensor layout
-        # ============================================================
-        predicted_noise = x.moveaxis(-1, -2)
+        x = self.final_proj(x)
+        predicted_noise = x.transpose(1, 2)
         return predicted_noise
 
 # Wrapper for compatibility:
@@ -470,7 +492,23 @@ class DiffusionPolicyUNet(nn.Module):
         """
 
         # YOUR CODE HERE
-        raise NotImplementedError
+        obs_encoder_params = []
+        unet_params = []
+        for name, parameter in self.named_parameters():
+            if parameter.requires_grad == False:
+                continue
+            if "obs_encoder" in name:
+                obs_encoder_params.append(parameter)
+            else:
+                unet_params.append(parameter)
+
+        param_groups = [
+            {"params": unet_params, "weight_decay": unet_weight_decay},
+            {"params": obs_encoder_params, "weight_decay": obs_encoder_weight_decay},
+        ]
+        return torch.optim.AdamW(param_groups,lr=learning_rate, betas=betas)
+
+        
 
     def forward(self,
                 noisy_actions: torch.Tensor,
@@ -520,7 +558,15 @@ class DiffusionPolicyUNet(nn.Module):
         """
 
         # YOUR CODE HERE
-        raise NotImplementedError
+        crop = None
+        if self.training:
+            crop = _random_crop_bhchw
+        else:
+            crop = _center_crop_bhchw
+        if img_ext is not None:
+            img_ext = crop(img_ext)
+        if img_wst is not None:
+            img_wst = crop(img_wst)
 
         obs_dict = {}
         if img_ext is not None:

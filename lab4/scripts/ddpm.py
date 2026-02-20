@@ -270,7 +270,7 @@ class DiffusionPolicyTrainer:
         lr_scheduler = get_scheduler(
             name="cosine",
             optimizer=optimizer,
-            num_warmup_steps=n_steps // 20
+            num_warmup_steps=n_steps // 20,
             num_training_steps=n_steps
         )
         # ============================================================
@@ -299,7 +299,7 @@ class DiffusionPolicyTrainer:
         #
         # YOUR CODE HERE
         # https://huggingface.co/docs/diffusers/v0.26.2/api/schedulers/ddpm#diffusers.DDPMScheduler.set_timesteps
-        self.noise_scheduler.set_timestamps(num_diffusion_steps)
+        self.noise_scheduler.set_timesteps(num_diffusion_steps)
 
 
         with tqdm(range(num_epochs), desc='Epoch', leave=True) as tglobal:
@@ -373,11 +373,17 @@ class DiffusionPolicyTrainer:
                         # YOUR CODE HERE
                         B = naction.shape[0]
                         true_noise = torch.randn(naction.shape).to(self.device)
-                        timesteps=torch.randint(0, num_train_timesteps, B).to(self.device)
+                        timesteps = torch.randint(
+                                    0,
+                                    self.noise_scheduler.num_train_timesteps,
+                                    (B,),
+                                    device = self.device,
+                                    dtype = torch.long
+                                )
                         noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
                         if "img_ext" not in obs: obs["img_ext"] = None
                         if "img_wst" not in obs: obs["img_wst"] = None
-                        pred_noise = self.model(noisy_actions, timesteps, observations=nobs, img_ext=obs["img_ext"], img_wst=obs["img_wst"])
+                        pred_noise = self.model(noisy_actions, timesteps, observations=obs["obs"], img_ext=obs["img_ext"], img_wst=obs["img_wst"])
                         loss = nn.functional.mse_loss(pred_noise, true_noise)
                         loss.backward()
                         optimizer.step()
@@ -460,17 +466,21 @@ class DiffusionPolicyTrainer:
                                 #   - Use .item() to store python floats (not tensors) in val_loss
                                 #
                                 # YOUR CODE HERE
-                                with torch.no_grad():
-                                    B = naction.shape[0]
-                                    true_noise = torch.randn(naction.shape).to(self.device)
-                                    timesteps=torch.randint(0, num_train_timesteps, B).to(self.device)
-                                    noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
-                                    if "img_ext" not in obs: obs["img_ext"] = None
-                                    if "img_wst" not in obs: obs["img_wst"] = None
-                                    pred_noise = self.model(noisy_actions, timesteps, observations=nobs, img_ext=obs["img_ext"], img_wst=obs["img_wst"])
-                                    loss = nn.functional.mse_loss(pred_noise, true_noise)
-                                    val_loss.append(loss.item())
-                                    avg_val_loss = mean(val_loss)
+                                true_noise = torch.randn(naction.shape).to(self.device)
+                                timesteps = torch.randint(
+                                    0,
+                                    self.noise_scheduler.num_train_timesteps,
+                                    (B,),
+                                    device = self.device,
+                                    dtype = torch.long
+                                )
+                                noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
+                                if "img_ext" not in obs: obs["img_ext"] = None
+                                if "img_wst" not in obs: obs["img_wst"] = None
+                                pred_noise = self.model(noisy_actions, timesteps, observations=obs["obs"], img_ext=obs["img_ext"], img_wst=obs["img_wst"])
+                                loss = nn.functional.mse_loss(pred_noise, true_noise)
+                                val_loss.append(loss.item())
+                                avg_val_loss = np.mean(np.array(val_loss))
 
                                 # ============================================================
                                 # TODO: Diffusion sampling loop (reverse process) + action-space evaluation
@@ -519,8 +529,22 @@ class DiffusionPolicyTrainer:
                                 #
                                 # YOUR CODE HERE
                                 # https://huggingface.co/docs/diffusers/v0.26.2/api/schedulers/ddpm#diffusers.DDPMScheduler.step
-                                raise NotImplementedError
+                                rand_actions = torch.randn_like(naction)
 
+                                for k in self.noise_scheduler.timesteps:
+                                    noise_pred = self.model(
+                                        noisy_actions=rand_actions,
+                                        timesteps=k,
+                                        observations={"obs": obs["obs"], "img_ext":obs.get("img_ext", None), "img_wst":obs.get("img_wst", None)}
+                                    )
+                                    rand_actions = self.noise_scheduler.step(
+                                        model_output=noise_pred,
+                                        timestep=k,
+                                        sample=rand_actions
+                                    ).prev_sample
+                                action_loss = nn.functional.mse_loss(rand_actions, naction).item()
+                                action_loss.append(action_loss)
+                                avg_action_loss = np.mean(action_loss)
                         ema.restore(self.model.parameters())  # restore original weights
 
                     tqdm.write(f"Train loss: {np.mean(epoch_loss):.4f}, "
@@ -639,7 +663,7 @@ def main():
         # init scheduler
         trainer.ddim_scheduler.set_timesteps(args["num_inference_steps"])
         vis = args.get("denoise_vis", {})
-        vis_enabled = bool(vis.get("enabled", False))cosine
+        vis_enabled = bool(vis.get("enabled", False))
 
         while True:
             # --------------------------------------------------
@@ -825,8 +849,12 @@ def main():
             #
             # YOUR CODE HERE
             # https://huggingface.co/docs/diffusers/v0.26.2/en/api/schedulers/ddpm#diffusers.DDPMScheduler.add_noise
-            raise NotImplementedError
-
+            noisy = trainer.noise_scheduler.add_noise(
+                original_samples=act.unsqueeze(0),  # (1, H, D)
+                noise=noise.unsqueeze(0),            # (1, H, D)
+                timesteps=t_batch                    # (1,)
+            )
+            noisy_actions.append(noisy[0].detach().cpu())
             noisy_actions.append(noisy[0].detach().cpu())
 
         # --------------------------------------------------
