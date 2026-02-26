@@ -168,6 +168,30 @@ class DiffusionPolicyTrainer:
             img_wst, train_indices, obs_horizon, chunk=1024
         )
 
+        # -------------------------
+        # package everything
+        # -------------------------
+        self.stats = {
+            "obs": {
+                "mean": obs_mean,
+                "std": obs_std,
+            },
+            "act": {
+                "mean": act_mean,
+                "std": act_std,
+                "min": act_min,
+                "max": act_max,
+            },
+            "img_ext": {
+                "mean": img_ext_mean,
+                "std": img_ext_std,
+            } if img_ext_mean is not None else None,
+            "img_wst": {
+                "mean": img_wst_mean,
+                "std": img_wst_std,
+            } if img_wst_mean is not None else None,
+        }
+
         # create datasets sharing stats
         self.train_ds = DiffusionDatasetBoth(
             obs, act,
