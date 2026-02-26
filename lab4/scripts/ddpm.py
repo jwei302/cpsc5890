@@ -532,6 +532,7 @@ class DiffusionPolicyTrainer:
                     "obs_horizon": self.obs_horizon,
                     "num_diffusion_steps": self.num_diffusion_steps,
                 },
+                "stats": self.stats
             },
             path,
         )
