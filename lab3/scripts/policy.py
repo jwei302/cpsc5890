@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import numpy as np
-from scripts.bc import BCConvMLPPolicy
-from scripts.action_vae import BCConvMLPPolicyLatent, ActionVAE 
-from scripts.crop import _center_crop_bhchw
+from bc import BCConvMLPPolicy
+from action_vae import BCConvMLPPolicyLatent, ActionVAE 
+from crop import _center_crop_bhchw
 from collections import deque
 import os
 import torch
@@ -48,7 +48,7 @@ class UniversalPolicy:
         else:
             print("Using BC policy")
             # BC Policy 
-            ckpt_path = "scripts/bc_asset/checkpoints/bcconv_latent_final_{8}_{128}.pt"
+            ckpt_path = "bc_asset/checkpoints/bcconv_latent_final_{8}_{128}.pt"
             ckpt_path = os.path.join(os.getcwd(), ckpt_path)
             ckpt = torch.load(ckpt_path, map_location=self.device, weights_only=False)
             new_dict = ckpt["policy_kwargs"]

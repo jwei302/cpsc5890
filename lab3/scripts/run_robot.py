@@ -11,7 +11,7 @@ from gello.robots.robot import PrintRobot
 from gello.zmq_core.robot_node import ZMQClientRobot
 from gello.zmq_core.camera_node import ZMQClientCamera
 
-from scripts.policy import UniversalPolicy
+from policy import UniversalPolicy
 
 
 @dataclass
@@ -27,7 +27,6 @@ class Args:
     mock: bool = False
     max_steps: int = 10_000
     print_every: int = 30  # steps
-    action_horizon: int = 16 # steps
 
 
 def main(args: Args):
@@ -50,25 +49,16 @@ def main(args: Args):
 
     dt = 1.0 / args.hz
 
-    # initial hardcoded in distribution state
-    obs = env.step([0, -0.8, 0, 0.8, 0, 1.0, 0, 0])
-
     # RL-style loop
     obs = env.get_obs()
     t0 = time.time()
 
     try:
-        print("try")
         for step in range(args.max_steps):
-            print(step)
             out = policy.step(obs)
             action = np.asarray(out.action, dtype=np.float32)
 
-            # do prediciton
-
-            for act in action[:args.action_horizon]:
-                obs = env.step(act)
-                time.sleep(dt)
+            obs = env.step(action)
 
             if args.print_every > 0 and (step % args.print_every == 0):
                 elapsed = time.time() - t0

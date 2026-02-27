@@ -4,7 +4,7 @@ from tqdm import tqdm
 from robomimic.models.obs_nets import ObservationEncoder
 from robomimic.utils.tensor_utils import time_distributed
 
-from scripts.dataset import make_loaders
+from dataset import make_loaders
 
 
 class Conv1dBlock(nn.Module):

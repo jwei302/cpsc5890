@@ -6,8 +6,8 @@ from robomimic.models.obs_nets import ObservationEncoder
 from robomimic.utils.tensor_utils import time_distributed
 from torch.distributions import Normal, kl_divergence
 
-from scripts.dataset import make_loaders
-from scripts.crop import _random_crop_bhchw, _center_crop_bhchw
+from dataset import make_loaders
+from crop import _random_crop_bhchw, _center_crop_bhchw
 
 
 # -------------------------
