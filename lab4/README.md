@@ -161,9 +161,9 @@ Report final validation loss:
 
 | Noise Schedule | 50 Steps | 100 Steps | 200 Steps |
 |---------------|----------|-----------|-----------|
-| Linear        |          |           |           |
-| Cosine        |          |           |           |
-| Schedule 3    |          |           |           |
+| Linear        | 0.0391   | 0.0318    |           |
+| Cosine        |          |  0.0176   | 0.0160    |
+| Scaled Linear |          |           |           |
 
 Discuss:
 - Does more denoising always help?
@@ -289,15 +289,38 @@ You can slice this list ```episode_files = _list_episode_files(data_dir)``` in `
 Include answers in README:
 
 1. How does the noise schedule affect learning stability?
+
+A: Noise schedule determines how quickly the signal is destroyed across timesteps. A poorly shaped schedules can make certain steps too easy (too little change) or too noisy (too much change), which creates stochasticity in the gradient descent and less stable training.  
+
 2. Why might cosine schedules outperform linear ones?
+
+A: Cosine schedulers outperform linear ones because linear schedulers denoise the clean distribution aggressively at the beginning, making it harder for the neural network to learn the initial change in distribution. Cosine scheduler introduce a more gradual and smoother denoising process. 
+
 3. Why does increasing denoising steps not always improve performance?
+
+A: Increasing the number of denoising steps may not always improve performance because each extra step may cause over-smoothing, distribution drift, or amplify prediction errors from previous steps. 
+
 4. Why is diffusion more stable than autoregressive action models?
+
+A: Autoregressive models rollout each step one by one, meaning that error per step will compound over the time since there is no way to retroactively correct missteps. Diffusion however, iteratively denoises a full noisy trajectory. This denoising process, albeit slower inference, allows the diffusion process to "correct" for sampling mistakes made along the way. 
+
 5. How does trajectory length affect diffusion difficulty?
+
+A: The longer the trajectory the harder it is for the model to jointly denoise across the time horizon. This increases uncertainty and room for error and makes temporal consistency more difficult. 
+
 6. Why does sampling produce diverse rollouts?
+
+A: Sampling produces diverse rollouts because DDPM is a stochastic process that yields a different sample each time. Each rollout starts from randomly sampled Gaussian noise which introduces the diversity, and the reverse denoising process maps initial noises to valid trajectories. 
+
 7. What failure modes did you observe on the robot?
 8. Why is safety critical when deploying stochastic policies?
 9. How does diffusion compare to behavior cloning for this task?
+
+A: Diffusion runs inference much slower compared to vanilla behavior cloning due to it requires multiple denoising the trajectory to get the trajectory, whilst BC predicts an action chunk for every forward pass. Diffusion better models multimodal (vision, state) which improved the rollout stability and quality. BC tended to experience compounding errors. 
+
 10. What tradeoffs exist between speed and sample quality?
+
+A: More denoising steps usually improve the sample quality but occasionally with diminishing returns and slower inference. 
 
 ---
 
