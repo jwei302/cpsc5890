@@ -1,5 +1,7 @@
 # Lab 4 — Diffusion Policy
 
+Completed by Jeffrey Wei and Austin Feng. 
+
 ## Objectives
 
 By the end of this lab, you will:

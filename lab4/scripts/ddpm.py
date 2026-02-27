@@ -215,8 +215,8 @@ class DiffusionPolicyTrainer:
                 model_name=None,
                 checkpoint_interval = 10):
 
-        train_loader = DataLoader(self.train_ds, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=0, pin_memory=False)
-        val_loader   = DataLoader(self.val_ds,   batch_size=batch_size, shuffle=False, drop_last=False, num_workers=0, pin_memory=False)
+        train_loader = DataLoader(self.train_ds, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4, pin_memory=False)
+        val_loader   = DataLoader(self.val_ds,   batch_size=batch_size, shuffle=False, drop_last=False, num_workers=4, pin_memory=False)
 
         # Create directory for logging
         os.makedirs("asset/training", exist_ok=True)
@@ -406,7 +406,7 @@ class DiffusionPolicyTrainer:
                     if val_loader is not None:
                         self.model.eval()
                         val_loss = []
-                        action_loss = []
+                        action_losses = []
 
                         # Use EMA weights for validation
                         ema.store(self.model.parameters())  # save current weights
@@ -474,7 +474,7 @@ class DiffusionPolicyTrainer:
                                     device = self.device,
                                     dtype = torch.long
                                 )
-                                noisy_actions = noise_scheduler.add_noise(naction, true_noise, timesteps)
+                                noisy_actions = self.noise_scheduler.add_noise(naction, true_noise, timesteps)
                                 if "img_ext" not in obs: obs["img_ext"] = None
                                 if "img_wst" not in obs: obs["img_wst"] = None
                                 pred_noise = self.model(noisy_actions, timesteps, observations=obs["obs"], img_ext=obs["img_ext"], img_wst=obs["img_wst"])
@@ -535,7 +535,9 @@ class DiffusionPolicyTrainer:
                                     noise_pred = self.model(
                                         noisy_actions=rand_actions,
                                         timesteps=k,
-                                        observations={"obs": obs["obs"], "img_ext":obs.get("img_ext", None), "img_wst":obs.get("img_wst", None)}
+                                        observations=obs["obs"], 
+                                        img_ext=obs.get("img_ext", None), 
+                                        img_wst=obs.get("img_wst", None)
                                     )
                                     rand_actions = self.noise_scheduler.step(
                                         model_output=noise_pred,
@@ -543,8 +545,8 @@ class DiffusionPolicyTrainer:
                                         sample=rand_actions
                                     ).prev_sample
                                 action_loss = nn.functional.mse_loss(rand_actions, naction).item()
-                                action_loss.append(action_loss)
-                                avg_action_loss = np.mean(action_loss)
+                                action_losses.append(action_loss)
+                                avg_action_loss = np.mean(action_losses)
                         ema.restore(self.model.parameters())  # restore original weights
 
                     tqdm.write(f"Train loss: {np.mean(epoch_loss):.4f}, "

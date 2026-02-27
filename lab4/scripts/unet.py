@@ -555,6 +555,8 @@ class DiffusionPolicyUNet(nn.Module):
             - Do NOT change dtype or device.
         """
 
+        # print(f"Observations: {observations}")
+
         # YOUR CODE HERE
         crop = None
         if self.training:
@@ -573,7 +575,7 @@ class DiffusionPolicyUNet(nn.Module):
         if img_wst is not None:
             obs_dict["wrist"] = img_wst
         if observations is not None and self.obs_low_dim > 0:
-            if observations.dim() == 2:
+            if observations.shape[-1] == 2:
                 observations = observations.unsqueeze(1).expand(-1, self.obs_horizon, -1)
             obs_dict["low_dim_obs"] = observations
         
