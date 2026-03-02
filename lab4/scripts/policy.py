@@ -4,122 +4,110 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import numpy as np
-
-from scripts.bc import BCConvMLPPolicy
-
 import torch
+
+from scripts.ddpm import DiffusionPolicyUNet  # your UNet DDPM/DDIM model
+from scripts.crop import _random_crop_bhchw, _center_crop_bhchw
+
 
 @dataclass
 class PolicyOut:
     action: np.ndarray
     info: Optional[Dict[str, Any]] = None
 
+
 class UniversalPolicy:
     """
-    Students implement:
-      - reset()
-      - step(obs) -> PolicyOut
-
-    obs (from RobotEnv) will typically include:
-      obs["joint_positions"] : (D,)
-      obs["base_rgb"]        : (H,W,3) uint8
-      obs["wrist_rgb"]       : (H,W,3) uint8
+    Universal policy using your 1D UNet diffusion model (DDPM/DDIM).
+    Supports state + base/wrist image sequences.
     """
-    def __init__(self):
-        # TODO: load model, init buffers, etc.
+    def __init__(
+        self,
+        obs_low_dim: int = 8,
+        action_dim: int = 8,
+        action_horizon: int = 16,
+        obs_horizon: int = 2,
+        image_type: str = "both",
+        **kwargs
+    ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.obs_low_dim = obs_low_dim
+        self.action_dim = action_dim
+        self.action_horizon = action_horizon
+        self.obs_horizon = obs_horizon
+        self.image_type = image_type
 
-        ckpt = torch.load(
-            "asset/checkpoints/bcconv_final.pt",
-            map_location=self.device,
-            weights_only=False
-        )
-        self.stats = ckpt["stats"]
-        self.model = BCConvMLPPolicy(**ckpt["model_kwargs"]).to(self.device)
-        self.model.load_state_dict(ckpt["model_state_dict"])
+        # Buffers for past observations
+        self.state_buffer = []
+        self.img_buffer = []
+        self.wimg_buffer = []
+
+        # Load diffusion model
+        self.model = DiffusionPolicyUNet(
+            obs_low_dim=obs_low_dim,
+            action_dim=action_dim,
+            action_horizon=action_horizon,
+            obs_horizon=obs_horizon,
+            image_type=image_type,
+            **kwargs
+        ).to(self.device)
         self.model.eval()
 
-        self.obs_horizon = ckpt["model_kwargs"]["obs_horizon"]
-        self.state_buffer = []
-        self.img_buffer = []
-        self.wimg_buffer = []
-
     def reset(self) -> None:
-        # TODO: reset hidden state / buffers
-        PolicyOut(action = np.deg2rad(np.array([-0.2,-45.4,-0.3,21.8,0.4,67.2,0.6])))
+        """Reset buffers."""
         self.state_buffer = []
         self.img_buffer = []
         self.wimg_buffer = []
-        
+
     def step(self, obs: Dict[str, Any]) -> PolicyOut:
+        """Step the policy given current observation."""
 
-    #   def _center_crop_hwc(img: np.ndarray, crop_h: int = 96, crop_w: int = 96) -> np.ndarray:
-    #       """
-    #       img: (H, W, 3) numpy array
-    #       return: (3, crop_h, crop_w) numpy array (CHW)
-    #       """
-    #       H, W, C = img.shape
-    #       assert C == 3, f"Expected 3 channels, got {C}"
+        # Convert observations
+        joints = np.asarray(obs["joint_positions"], dtype=np.float32)
+        img = np.asarray(obs["base_rgb"], dtype=np.float32)
+        wimg = np.asarray(obs["wrist_rgb"], dtype=np.float32)
 
-    #       if H < crop_h or W < crop_w:
-    #           raise ValueError(f"Image too small to crop: {(H, W)} < {(crop_h, crop_w)}")
+        # Crop images depending on train/eval mode
+        crop_fn = _random_crop_bhchw if self.model.training else _center_crop_bhchw
 
-    #       top = (H - crop_h) // 2
-    #       left = (W - crop_w) // 2
+        # Add batch & time dims: (B=1, T=1, C, H, W)
+        img_torch = torch.from_numpy(img).permute(2,0,1).unsqueeze(0).unsqueeze(0).float()
+        wimg_torch = torch.from_numpy(wimg).permute(2,0,1).unsqueeze(0).unsqueeze(0).float()
 
-    #       cropped = img[top:top + crop_h, left:left + crop_w, :]  # (96,96,3)
-    #       cropped = np.transpose(cropped, (2, 0, 1))               # (3,96,96)
-    #       return cropped
-    
-      joints = np.asarray(obs["joint_positions"], dtype=np.float32)
-      img = np.asarray(obs["base_rgb"], dtype=np.float32)
-      wimg = np.asarray(obs["wrist_rgb"], dtype=np.float32)
+        # Crop images
+        img_torch = crop_fn(img_torch)  # (1,1,3,Hc,Wc)
+        wimg_torch = crop_fn(wimg_torch)
 
-    #   img = _center_crop_hwc(img, 96, 96)
-    #   wimg = _center_crop_hwc(wimg, 96, 96)
+        # Append to buffers
+        self.state_buffer.append(joints.copy())
+        self.img_buffer.append(img_torch)
+        self.wimg_buffer.append(wimg_torch)
 
-      img_mean = self.stats["img_mean"].reshape(3, 1, 1)
-      img_std  = self.stats["img_std"].reshape(3, 1, 1)
-
-      wimg_mean = self.stats["wimg_mean"].reshape(3, 1, 1)
-      wimg_std  = self.stats["wimg_std"].reshape(3, 1, 1)
-
-      joints = (joints - self.stats["s_mean"])/self.stats["s_std"]
-      img = (img - img_mean)/img_std
-      wimg = (wimg - wimg_mean)/wimg_std
-
-      self.state_buffer.append(joints.copy())
-      self.img_buffer.append(img)
-      self.wimg_buffer.append(wimg)
-      
-      if len(self.state_buffer) > self.obs_horizon:
+        # Keep only last obs_horizon steps
         self.state_buffer = self.state_buffer[-self.obs_horizon:]
-      if len(self.img_buffer) > self.obs_horizon:
         self.img_buffer = self.img_buffer[-self.obs_horizon:]
-      if len(self.wimg_buffer) > self.obs_horizon:
         self.wimg_buffer = self.wimg_buffer[-self.obs_horizon:]
-  
-      state_seq = np.stack(self.state_buffer, axis=0).astype(np.float32)  # (T,D)
-      img_seq   = np.stack(self.img_buffer, axis=0).astype(np.float32)    # (T,3,96,96)
-      wimg_seq  = np.stack(self.wimg_buffer, axis=0).astype(np.float32)   # (T,3,96,96)
 
-      state_t = torch.from_numpy(state_seq).unsqueeze(0).to(self.device)  # (1,T,D)
-      img_t   = torch.from_numpy(img_seq).unsqueeze(0).to(self.device)    # (1,T,3,96,96)
-      wimg_t  = torch.from_numpy(wimg_seq).unsqueeze(0).to(self.device)   # (1,T,3,96,96)
+        # Stack sequences: (B=1, T, ...)
+        state_seq = torch.from_numpy(np.stack(self.state_buffer, axis=0)[None, ...]).to(self.device)  # (1,T,D)
+        img_seq = torch.cat(self.img_buffer, dim=1).to(self.device)  # (1,T,3,H,W)
+        wimg_seq = torch.cat(self.wimg_buffer, dim=1).to(self.device)
 
-      action = self.model(state_t, img_t, wimg_t)
-      action = action.detach().cpu().numpy()
-      action = action * self.stats["a_std"] + self.stats["a_mean"]
+        # Flatten/encode condition to match UNet expected tensor
+        cond = torch.cat([
+            state_seq.flatten(1),      # (1, T*D)
+            img_seq.flatten(1),        # (1, T*3*H*W)
+            wimg_seq.flatten(1)
+        ], dim=-1)  # (1, cond_dim)
 
-      # normalize shape to (K, 8)
-      action = np.asarray(action, dtype=np.float32)
-      if action.ndim == 1:          # (8,)
-          action = action[None, :]  # (1,8)
-      elif action.ndim == 2:        # (1,8) or (K,8)
-          pass
-      elif action.ndim == 3:        # (1,K,8)
-          action = action[0]        # (K,8)
-      else:
-          raise ValueError(f"Unexpected action shape: {action.shape}")
+        # Initialize noisy action input for inference
+        x = torch.randn((1, self.action_horizon, self.action_dim), device=self.device)
 
-      return action
+        # Denoising: use your DDPM/DDIM inference function
+        with torch.no_grad():
+            for t in reversed(range(self.model.num_timesteps)):  # full DDPM steps
+                timestep = torch.tensor([t], device=self.device, dtype=torch.long)
+                x = self.model(x, timestep, cond)
+
+        action_pred = x.cpu().numpy()  # (1, K, action_dim)
+        return PolicyOut(action=action_pred)

@@ -99,7 +99,7 @@ class DiffusionPolicyTrainer:
             num_train_timesteps=num_diffusion_steps,
             # the choise of beta schedule has big impact on performance
             # we found squared cosine works the best
-            beta_schedule='squaredcos_cap_v2',
+            beta_schedule='linear',
             # clip output to [-1,1] to improve stability
             clip_sample=True,
             # our network predicts noise (instead of denoised action)
@@ -110,7 +110,7 @@ class DiffusionPolicyTrainer:
             num_train_timesteps=num_diffusion_steps,
             # the choise of beta schedule has big impact on performance
             # we found squared cosine works the best
-            beta_schedule='squaredcos_cap_v2',
+            beta_schedule='linear',
             # clip output to [-1,1] to improve stability
             clip_sample=False,
             # our network predicts noise (instead of denoised action)
@@ -168,6 +168,26 @@ class DiffusionPolicyTrainer:
         img_wst_mean, img_wst_std = DiffusionDatasetBoth._compute_image_stats_subset_chunked(
             img_wst, train_indices, obs_horizon, chunk=1024
         )
+        self.stats = {
+            "obs": {
+                "mean": obs_mean,
+                "std": obs_std,
+            },
+            "act": {
+                "mean": act_mean,
+                "std": act_std,
+                "min": act_min,
+                "max": act_max,
+            },
+            "img_ext": {
+                "mean": img_ext_mean,
+                "std": img_ext_std,
+            } if img_ext_mean is not None else None,
+            "img_wst": {
+                "mean": img_wst_mean,
+                "std": img_wst_std,
+            } if img_wst_mean is not None else None,
+        }
 
         # create datasets sharing stats
         self.train_ds = DiffusionDatasetBoth(
@@ -578,6 +598,7 @@ class DiffusionPolicyTrainer:
         if dir_name and not os.path.exists(dir_name):
             os.makedirs(dir_name, exist_ok=True)
 
+        print("Saving Stats:", self.stats)
         torch.save(
             {
                 "state_dict": self.model.state_dict(),
@@ -588,6 +609,7 @@ class DiffusionPolicyTrainer:
                     "obs_horizon": self.obs_horizon,
                     "num_diffusion_steps": self.num_diffusion_steps,
                 },
+                "stats": self.stats
             },
             path,
         )
