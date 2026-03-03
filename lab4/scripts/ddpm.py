@@ -272,7 +272,7 @@ class DiffusionPolicyTrainer:
         #
         # Required inputs:
         #   - optimizer: the optimizer you created (e.g., AdamW)
-        #   - num_warmup_steps: how many update steps to linearly ramp LR from 0 → base LR
+        #   - num_warmup_steps: how many update steps to scaled_linearly ramp LR from 0 → base LR
         #   - num_training_steps: total number of optimizer steps across all epochs
         #       typically = len(train_loader) * num_epochs
         #
