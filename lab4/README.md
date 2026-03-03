@@ -161,9 +161,9 @@ Report final validation loss:
 
 | Noise Schedule | 50 Steps | 100 Steps | 200 Steps |
 |---------------|----------|-----------|-----------|
-| Linear        | 0.0391   | 0.0318    |           |
-| Cosine        | 0.0165   |  0.0176   | 0.0160    |
-| Scaled Linear |          |           |           |
+| Linear        | 0.0563   | 0.0329    | 0.0243    |
+| Cosine        | 0.0209   |  0.0196   | 0.0201    |
+| Scaled Linear | 0.0733 |  0.0529   | 0.0380    |
 
 Discuss:
 - Does more denoising always help?
