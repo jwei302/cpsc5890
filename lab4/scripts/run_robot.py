@@ -27,7 +27,7 @@ class Args:
     # debug / dev
     mock: bool = False
     max_steps: int = 10_000
-    print_every: int = 10  # steps
+    print_every: int = 1  # steps
 
 
 def main(args: Args):
@@ -56,6 +56,7 @@ def main(args: Args):
 
     try:
         for step in range(args.max_steps):
+            print(step, args.max_steps)
             action_seq = policy.step(obs)                 # (K,8) or (1,8)
             action_seq = np.asarray(action_seq, dtype=np.float32)
 
@@ -64,16 +65,19 @@ def main(args: Args):
 
             # execute the whole chunk
             for a in action_seq:
+                print(len(action_seq))
                 a = np.asarray(a, dtype=np.float32).reshape(-1)  # ensure (8,)
-                a = np.asarray([ 0.024528, -0.885107, -0.065961,  0.704097, -0.001534,  0.909635,  0.027596, -0.      ])
+                # a = np.asarray([ 0.024528, -0.885107, -0.065961,  0.704097, -0.001534,  0.909635,  0.027596, -0.      ])
                 obs = env.step(a)
 
                 if args.print_every > 0 and (step % args.print_every == 0):
                     elapsed = time.time() - t0
                     jp = obs["joint_positions"]
+                    print(step)
                     print(f"[step {step:05d} | {elapsed:6.1f}s] joints[0:3]={np.array(jp)[:3]}")
 
                 time.sleep(dt)
+                break
 
     except KeyboardInterrupt:
         print("\nStopped (Ctrl+C).")

@@ -162,7 +162,7 @@ Report final validation loss:
 | Noise Schedule | 50 Steps | 100 Steps | 200 Steps |
 |---------------|----------|-----------|-----------|
 | Linear        | 0.0391   | 0.0318    |           |
-| Cosine        |          |  0.0176   | 0.0160    |
+| Cosine        | 0.0165   |  0.0176   | 0.0160    |
 | Scaled Linear |          |           |           |
 
 Discuss:

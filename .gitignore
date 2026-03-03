@@ -5,3 +5,9 @@ Miniconda3-*.sh
 # checkpoints / models
 lab3/asset/checkpoints/
 *.pt
+__pycache__
+lab3/gello_software
+asset
+
+__pycache__
+
