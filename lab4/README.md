@@ -128,7 +128,12 @@ For debugging:
 
 Check:
 - Does denoising improve over iterations?
+
+Yes, with more denoising iterations the sampled trajectory becomes better.
+
 - Does loss correlate with visual quality?
+
+Not necessarily, cosine scheduler has better loss, but the visual quality is not as good as linear and scaled linear. 
 
 ---
 
@@ -167,7 +172,12 @@ Report final validation loss:
 
 Discuss:
 - Does more denoising always help?
+
+More denoising does not always help, as shown through the cosine noise scheduler. 
+
 - Which schedule works best?
+
+A: It looks like cosine works the best with respect to the final validation loss. 
 
 ---
 
@@ -313,7 +323,13 @@ A: The longer the trajectory the harder it is for the model to jointly denoise a
 A: Sampling produces diverse rollouts because DDPM is a stochastic process that yields a different sample each time. Each rollout starts from randomly sampled Gaussian noise which introduces the diversity, and the reverse denoising process maps initial noises to valid trajectories. 
 
 7. What failure modes did you observe on the robot?
+
+The robot often missed the red block slightly. We suspect that this is due to the stochasticity of the policy, which made it difficult for the arm to very accurately traverse to the exact location. 
+
 8. Why is safety critical when deploying stochastic policies?
+
+There are many safeguards that need to occur when deploying a stochastic policy because the policy has no proprioceptive safeguards from crashing into itself, especially when the actions are sampled from a probability distribution. This is why it is important to have someone at the E-stop to prevent the arm to self-destruct, or hardcode safeguard checks to ensure that the arm is operating wihtin a safe region. 
+
 9. How does diffusion compare to behavior cloning for this task?
 
 A: Diffusion runs inference much slower compared to vanilla behavior cloning due to it requires multiple denoising the trajectory to get the trajectory, whilst BC predicts an action chunk for every forward pass. Diffusion better models multimodal (vision, state) which improved the rollout stability and quality. BC tended to experience compounding errors. 
