@@ -17,7 +17,7 @@ By the end of this lab, you will:
 
 ## Setup
 
-conda install
+Set up your environment
 
 ```
 conda env create -f lab5.yml
