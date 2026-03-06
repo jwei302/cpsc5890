@@ -13,15 +13,17 @@ import os
 import numpy as np
 import gymnasium as gym
 import torch
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # RL algorithms
 from stable_baselines3 import PPO, SAC
 
 # Utilities
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.common.callbacks import BaseCallback
+
+import gym_xarm
 
 
 # ============================================================
@@ -65,6 +67,13 @@ class MetricsCallback(BaseCallback):
 
         return True
 
+def make_env(env_id, rank=0):
+    def _init():
+        env = gym.make(env_id)
+        env = Monitor(env)
+        env.reset(seed=rank)
+        return env
+    return _init
 
 # ============================================================
 # Model Factory
@@ -107,6 +116,9 @@ def make_model(algo, env, args):
             ent_coef=ent_coef,
             policy_kwargs=policy_kwargs,
             verbose=1,
+            learning_starts=10_000,
+            tau=0.05,
+            batch_size=256,
         )
 
     else:
@@ -171,13 +183,8 @@ def main(args):
     #   - Termination conditions
     # The RL algorithm will interact with this environment
     # during training to collect experience.
-    env = gym.make(args.env)
-
-    # Monitor records episode returns automatically
-    env = Monitor(env)
-
-    # Stable-Baselines3 requires vectorized environment
-    env = DummyVecEnv([lambda: env])
+    env = DummyVecEnv([make_env(args.env, i) for i in range(args.n_envs)])
+    env = VecNormalize(env, norm_obs=True, norm_reward=False)
 
     # --------------------------------------------------------
     # Create model
@@ -202,10 +209,16 @@ def main(args):
     # --------------------------------------------------------
     # Evaluate after training
     # --------------------------------------------------------
-    mean_reward, mean_success = evaluate(model, env)
+    mean_reward, std_reward = evaluate_policy(
+        model,
+        env,
+        n_eval_episodes=10,
+        deterministic=True,
+    )
 
     print("Mean reward:", mean_reward)
-    print("Mean success:", mean_success)
+    print("Std reward:", std_reward)
+    print("Mean success: not computed in evaluate_policy")
 
     # --------------------------------------------------------
     # Plot Reward Curve
@@ -238,6 +251,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
+    # Number of envs
+    parser.add_argument("--n_envs", type=int, default=4)
+
     # Environment name (Gym registry)
     parser.add_argument("--env", type=str, required=True)
 
@@ -245,13 +261,13 @@ if __name__ == "__main__":
     parser.add_argument("--algo", type=str, choices=["ppo", "sac"], required=True)
 
     # Training length
-    parser.add_argument("--timesteps", type=int, default=200000)
+    parser.add_argument("--timesteps", type=int, default=2_000_000)
 
     # Learning rate
     parser.add_argument("--lr", type=float, default=3e-4)
 
     # Discount factor
-    parser.add_argument("--gamma", type=float, default=0.99)
+    parser.add_argument("--gamma", type=float, default=0.95)
 
     # PPO clip parameter: https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html
     parser.add_argument("--clip_range", type=float, default=0.2)
