@@ -13,18 +13,19 @@ import os
 import numpy as np
 import gymnasium as gym
 import torch
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 # RL algorithms
 from stable_baselines3 import PPO, SAC
 
 # Utilities
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
+from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import BaseCallback
 
-import gym_xarm
-
+import gymnasium as gym
+import gym_xarm  # registers envs on import
 
 # ============================================================
 # Callback for Logging Episode Metrics
@@ -67,13 +68,6 @@ class MetricsCallback(BaseCallback):
 
         return True
 
-def make_env(env_id, rank=0):
-    def _init():
-        env = gym.make(env_id)
-        env = Monitor(env)
-        env.reset(seed=rank)
-        return env
-    return _init
 
 # ============================================================
 # Model Factory
@@ -116,9 +110,6 @@ def make_model(algo, env, args):
             ent_coef=ent_coef,
             policy_kwargs=policy_kwargs,
             verbose=1,
-            learning_starts=10_000,
-            tau=0.05,
-            batch_size=256,
         )
 
     else:
@@ -163,6 +154,15 @@ def evaluate(model, env, n_rollouts=10):
 
     return mean_reward, mean_success
 
+def _make_env(env, render_mode):
+    """
+    Helper function that returns a function creating the environment.
+    Required for SubprocVecEnv.
+    """
+    def _init():
+        env = gym.make(env, render_mode=render_mode)
+        return env
+    return _init
 
 # ============================================================
 # Main Training Function
@@ -183,8 +183,22 @@ def main(args):
     #   - Termination conditions
     # The RL algorithm will interact with this environment
     # during training to collect experience.
-    env = DummyVecEnv([make_env(args.env, i) for i in range(args.n_envs)])
-    env = VecNormalize(env, norm_obs=True, norm_reward=False)
+
+    # create vectorized env
+    vec_env = make_vec_env(
+        _make_env(args.env, "rgb_array"),
+        n_envs=16,
+        seed=0,
+        vec_env_cls=SubprocVecEnv
+    )
+
+    # normalize observations and rewards
+    env = VecNormalize(
+        vec_env,
+        norm_obs=True,
+        norm_reward=True,
+        clip_obs=100.0
+    )
 
     # --------------------------------------------------------
     # Create model
@@ -209,16 +223,10 @@ def main(args):
     # --------------------------------------------------------
     # Evaluate after training
     # --------------------------------------------------------
-    mean_reward, std_reward = evaluate_policy(
-        model,
-        env,
-        n_eval_episodes=10,
-        deterministic=True,
-    )
+    mean_reward, mean_success = evaluate(model, env)
 
     print("Mean reward:", mean_reward)
-    print("Std reward:", std_reward)
-    print("Mean success: not computed in evaluate_policy")
+    print("Mean success:", mean_success)
 
     # --------------------------------------------------------
     # Plot Reward Curve
@@ -251,9 +259,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    # Number of envs
-    parser.add_argument("--n_envs", type=int, default=4)
-
     # Environment name (Gym registry)
     parser.add_argument("--env", type=str, required=True)
 
@@ -261,13 +266,13 @@ if __name__ == "__main__":
     parser.add_argument("--algo", type=str, choices=["ppo", "sac"], required=True)
 
     # Training length
-    parser.add_argument("--timesteps", type=int, default=2_000_000)
+    parser.add_argument("--timesteps", type=int, default=1000000)
 
     # Learning rate
-    parser.add_argument("--lr", type=float, default=3e-4)
+    parser.add_argument("--lr", type=float, default=1e-3)
 
     # Discount factor
-    parser.add_argument("--gamma", type=float, default=0.95)
+    parser.add_argument("--gamma", type=float, default=0.99)
 
     # PPO clip parameter: https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html
     parser.add_argument("--clip_range", type=float, default=0.2)
