@@ -16,13 +16,14 @@ import torch
 import matplotlib.pyplot as plt
 
 # RL algorithms
-from stable_baselines3 import PPO, SAC
+from stable_baselines3 import PPO, SAC, HerReplayBuffer
 
 # Utilities
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.logger import configure
 
 import gymnasium as gym
 import gym_xarm  # registers envs on import
@@ -208,6 +209,10 @@ def main(args):
     callback = MetricsCallback()
 
     print(f"Training {args.algo.upper()} on {args.env}")
+
+    new_logger = configure(f"./asset/{args.env}_{args.algo}", ["stdout", "csv"])
+        
+    model.set_logger(new_logger)
 
     # --------------------------------------------------------
     # Train
