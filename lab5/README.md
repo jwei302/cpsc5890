@@ -48,7 +48,7 @@ Train PPO:
 python train.py \
     --algo ppo \
     --env reach \
-    --timesteps 200000 \
+    --timesteps 1000000 \
     --eval-freq 5000 \
     --seed 0
 ```
@@ -59,7 +59,7 @@ Train SAC:
 python train.py \
     --algo sac \
     --env reach \
-    --timesteps 200000 \
+    --timesteps 1000000 \
     --eval-freq 5000 \
     --seed 0
 ```
@@ -191,6 +191,8 @@ Please pull the panda_gym repo and install from source: https://github.com/qgall
 git clone https://github.com/qgallouedec/panda-gym.git
 pip install -e panda-gym
 ```
+
+Make sure to `import pand_gym` before using `PandaPickAndPlace-v3`.
 
 ### Using Hindsight Experience Replay (HER) for Long-Horizon Task
 
