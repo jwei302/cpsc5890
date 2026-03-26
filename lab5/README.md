@@ -192,11 +192,11 @@ git clone https://github.com/qgallouedec/panda-gym.git
 pip install -e panda-gym
 ```
 
-## Using Hindsight Experience Replay (HER) for Long-Horizon Task
+### Using Hindsight Experience Replay (HER) for Long-Horizon Task
 
-For long-horizon tasks, it is often beneficial to use Hindsight Experience Replay (HER) (https://arxiv.org/pdf/1707.01495, https://stable-baselines3.readthedocs.io/en/master/modules/her.html), which improves learning in sparse-reward settings by relabeling failed trajectories with goals that were actually achieved during the episode.
+For long-horizon tasks, it is often beneficial to use Hindsight Experience Replay (HER) (https://arxiv.org/pdf/1707.01495), which improves learning in sparse-reward settings by relabeling failed trajectories with goals that were actually achieved during the episode.
 
-To make a Gym environment HER-compatible, the following requirements must be satisfied:
+To make a Gym environment HER-compatible, the following requirements must be satisfied: https://stable-baselines3.readthedocs.io/en/master/modules/her.html
 
 - Dict observation: The environment must return a dictionary observation with three fields: "observation" (the state used by the policy), "achieved_goal" (the current goal state), and "desired_goal" (the target goal). The observation space must be defined as a gym.spaces.Dict with the same structure.
 - Vectorized compute_reward(): The environment must implement compute_reward(achieved_goal, desired_goal, info) that works for both single inputs (goal_dim,) and batched inputs (N, goal_dim).
