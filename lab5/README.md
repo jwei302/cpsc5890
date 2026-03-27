@@ -219,7 +219,7 @@ Example components:
 
 ---
 
-### Reward 2 — Semi-Sparse
+### Reward 2 — Semi (TODO)
 
 Example components:
 
