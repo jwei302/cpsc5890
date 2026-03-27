@@ -201,9 +201,9 @@ For long-horizon tasks, it is often beneficial to use Hindsight Experience Repla
 To make a Gym environment HER-compatible, the following requirements must be satisfied: https://stable-baselines3.readthedocs.io/en/master/modules/her.html
 
 - Dict observation: The environment must return a dictionary observation with three fields: "observation" (the state used by the policy), "achieved_goal" (the current goal state), and "desired_goal" (the target goal). The observation space must be defined as a gym.spaces.Dict with the same structure.
-- Vectorized compute_reward(): The environment must implement compute_reward(achieved_goal, desired_goal, info) that works for both single inputs (goal_dim,) and batched inputs (N, goal_dim).
-- Vectorized is_success(): The environment should provide an is_success() function that checks whether the goal is achieved and supports both single and batched inputs. It is also common to include "is_success" in the info dictionary returned by step().
-- MultiInput policy: Since observations are dictionaries, the agent must use a policy that supports multiple inputs (e.g., 'MultiInputPolicy' in Stable-Baselines3).
+- Vectorized `compute_reward()`: The environment must implement `compute_reward(achieved_goal, desired_goal, info)` that works for both single inputs `(goal_dim,)` and batched inputs `(N, goal_dim)`.
+- Vectorized `is_success()`: The environment should provide an `is_success()` function that checks whether the goal is achieved and supports both single and batched inputs. It is also common to include "is_success" in the info dictionary returned by `step()`.
+- MultiInput policy: Since observations are dictionaries, the agent must use a policy that supports multiple inputs (e.g., `MultiInputPolicy` in Stable-Baselines3).
 
 ---
 
