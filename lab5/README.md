@@ -26,7 +26,7 @@ conda env create -f lab5.yml
 Please pull the gym_xarm repo inside the lab 5 folder and install via
 ```bash
 git clone git@github.com:iqr-lab/gym-xarm.git
-pip install -e . gym-xarm
+pip install -e gym-xarm
 ```
 
 run the test script to see all the environments
