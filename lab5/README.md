@@ -47,7 +47,7 @@ Train PPO:
 ```bash
 python train.py \
     --algo ppo \
-    --env reach \
+    --env gym_xarm/XarmReach-v0 \
     --timesteps 1000000 \
     --eval-freq 5000 \
     --seed 0
@@ -58,7 +58,7 @@ Train SAC:
 ```bash
 python train.py \
     --algo sac \
-    --env reach \
+    --env gym_xarm/XarmReach-v0 \
     --timesteps 1000000 \
     --eval-freq 5000 \
     --seed 0
@@ -211,14 +211,11 @@ To make a Gym environment HER-compatible, the following requirements must be sat
 
 Design reward functions with **different sparsity levels** in `compute_reward` function in `panda_gym/envs/tasks/pick_and_place.py`
 
-### Reward 1 — Dense
+### Reward 1 — Dense (Implemented)
 
 Example components:
 
-- Distance to block
-- Distance to goal
-- Gripper alignment bonus
-- Small shaping terms
+- Distance from block to goal
 
 ---
 
@@ -232,7 +229,7 @@ Example components:
 
 ---
 
-### Reward 3 — Sparse
+### Reward 3 — Sparse (Implemented)
 
 ```
 +1 if block placed within tolerance
