@@ -36,23 +36,10 @@ class PolicyNetwork(Module):
             probs = torch.softmax(self.net(states), dim=-1)
             distb = Categorical(probs)
         else:
-            # mean = self.net(states)
-
-            # std = torch.exp(self.log_std)
-            # cov_mtx = torch.eye(self.action_dim) * (std ** 2)
-
-            # distb = MultivariateNormal(mean, cov_mtx)
             mean = self.net(states)
 
-            log_std = torch.clamp(self.log_std, -5, 2)
-            std = torch.exp(log_std)
-
-            # ensure positive variance
-            std = torch.clamp(std, min=1e-3)
-
-            # batch-aware diagonal covariance
-            cov = std.pow(2)
-            cov_mtx = torch.diag_embed(cov.expand(mean.shape[0], -1))
+            std = torch.exp(self.log_std)
+            cov_mtx = torch.eye(self.action_dim) * (std ** 2)
 
             distb = MultivariateNormal(mean, cov_mtx)
 
