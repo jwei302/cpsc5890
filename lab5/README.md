@@ -25,7 +25,7 @@ conda env create -f lab5.yml
 
 Please pull the gym_xarm repo inside the lab 5 folder and install via
 ```bash
-git clone git@github.com:iqr-lab/gym-xarm.git
+git clone git@github.com:iqr-lab/gym-xarm.gitz
 pip install -e gym-xarm
 ```
 
@@ -456,37 +456,6 @@ Before lab, answer:
 - How does **clip range affect PPO**?
 - How does **discount factor affect long-term reward**?
 - How do you define **policy network architecture**?
-
----
-
-# TODO (Instructor Setup)
-
-- Add objects to MuJoCo via **GELLO or Gym xArm**
-
-Randomize:
-
-- Robot start pose
-- Block position
-- Goal position
-
-Match simulation to real robot:
-
-- Base height
-- Base frame orientation
-
-Provide working:
-
-- PPO training script
-- SAC training script
-- Predefined reaching reward
-
-Provide:
-
-- Evaluation loop
-- Averaging across rollouts
-- Plotting utilities
-- Example policy architectures
-- Code for rendering and saving videos
 
 ---
 

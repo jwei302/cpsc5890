@@ -135,10 +135,10 @@ def evaluate(model, env, n_rollouts=10):
 
     for _ in range(n_rollouts):
         obs = env.reset()
-        done = False
+        done = [False]
         ep_reward = 0
 
-        while not done:
+        while not done[0]:
             # Deterministic=True → no exploration noise
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
@@ -161,8 +161,8 @@ def _make_env(env, render_mode):
     Required for SubprocVecEnv.
     """
     def _init():
-        env = gym.make(env, render_mode=render_mode)
-        return env
+        _env = gym.make(env, render_mode=render_mode)
+        return _env
     return _init
 
 # ============================================================
