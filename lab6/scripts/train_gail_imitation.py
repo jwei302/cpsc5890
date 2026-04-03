@@ -12,6 +12,12 @@ from imitation.data.wrappers import RolloutInfoWrapper
 from imitation.rewards.reward_nets import BasicRewardNet
 from imitation.util.networks import RunningNorm
 from imitation.util.util import make_vec_env
+from imitation.util import logger as imit_logger
+
+custom_logger = imit_logger.configure(
+    folder="./logs/gail/",
+    format_strs=["stdout", "tensorboard", "csv"],
+)
 
 
 SEED = 42
@@ -79,6 +85,7 @@ def main():
         n_epochs=5,
         seed=SEED,
         verbose=1,
+        tensorboard_log="./logs/gail_tensorboard/",
     )
 
     # -------------------------
@@ -102,7 +109,7 @@ def main():
         gen_algo=learner,
         reward_net=reward_net,
         allow_variable_horizon=True,
-        log_dir="./logs"
+        custom_logger=custom_logger,
     )
 
     # -------------------------
