@@ -25,12 +25,12 @@ SEED = 42
 # =========================
 # Config
 # =========================
-ENV_NAME = "gym_xarm/XarmReach-v0"
-SAC_MODEL_PATH = "experts/sac_reach"
+ENV_NAME = "gym_xarm/XarmPickPlaceDense-v0" #xarm pick and place dense
+SAC_MODEL_PATH = "experts/sac_pickplace" #sac pick and place
 
 N_ENVS = 8
 N_EXPERT_EPISODES = 60
-TOTAL_GAIL_TIMESTEPS = 600_000
+TOTAL_GAIL_TIMESTEPS = 1_000_000
 
 
 # =========================

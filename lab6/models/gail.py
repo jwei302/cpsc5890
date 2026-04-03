@@ -61,9 +61,9 @@ class GAIL(Module):
         #
         # Use appropriate input/output dimensions.
         # ============================================================
-        self.pi = None
-        self.v = None
-        self.d = None
+        self.pi = PolicyNetwork(self.state_dim, self.action_dim, self.discrete)
+        self.v = ValueNetwork(self.state_dim)
+        self.d = Discriminator(self.state_dim, self.action_dim, self.discrete)
 
     def get_networks(self):
         return [self.pi, self.v]
@@ -85,8 +85,10 @@ class GAIL(Module):
         #   3. squeeze batch dimension
         #   4. clip to [-1, 1]
         # ============================================================
-        action = None
-
+        action = distb.sample()
+        action = action.detach().cpu().numpy()
+        action = action.squeeze(0)
+        action = np.clip(action, -1, 1)
         return action
 
     def _collect_trajectories(self, env, policy_fn, num_steps, horizon, render=False):
@@ -352,8 +354,14 @@ class GAIL(Module):
             #     )
             # )
             # ============================================================
-            loss = None
-            
+            loss = (
+                torch.nn.functional.binary_cross_entropy_with_logits(
+                    exp_scores, torch.zeros_like(exp_scores)
+                )
+                + torch.nn.functional.binary_cross_entropy_with_logits(
+                    nov_scores, torch.ones_like(nov_scores)
+                )
+            )            
             loss.backward()
             opt_d.step()
 
