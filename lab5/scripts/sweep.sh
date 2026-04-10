@@ -1,10 +1,10 @@
 #!/bin/bash
 
-ENV="Pendulum-v1"
-TIMESTEPS=300000
+ENV="gym_xarm/XarmReach-v0"
+TIMESTEPS=3000000
 
 # Common values
-LR_VALUES=(1e-4 3e-4 1e-3)
+LR_VALUES=(1e-5 3e-5 1e-4)
 GAMMA_VALUES=(0.95 0.99 0.999)
 
 CLIP_VALUES=(0.1 0.2 0.3)
@@ -22,11 +22,15 @@ for lr in "${LR_VALUES[@]}"; do
         --lr $lr \
         --gamma $gamma \
         --clip_range $clip \
-        --log_dir logs/ppo_lr${lr}_g${gamma}_clip${clip}
+        --log_dir logs/long_ppo_lr${lr}_g${gamma}_clip${clip}
 
     done
   done
 done
+
+# Common values
+LR_VALUES=(1e-3 5e-3 1e-2)
+GAMMA_VALUES=(0.9 0.99 0.95)
 
 ENT_VALUES=("auto" "0.1" "0.5")
 
@@ -43,7 +47,7 @@ for lr in "${LR_VALUES[@]}"; do
         --lr $lr \
         --gamma $gamma \
         --ent_coef $ent \
-        --log_dir logs/sac_lr${lr}_g${gamma}_ent${ent}
+        --log_dir logs/long_sac_lr${lr}_g${gamma}_ent${ent}
 
     done
   done
