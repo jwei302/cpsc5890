@@ -168,6 +168,28 @@ def _make_env(env, render_mode):
 # ============================================================
 # Main Training Function
 # ============================================================
+
+import imageio
+
+def save_rollout(model, env_id, out_path, max_steps=1000, fps=30):
+    env = gym.make(env_id, render_mode="rgb_array")
+    obs, info = env.reset()
+    frames = []
+    done = False
+    steps = 0
+    while not done and steps < max_steps:
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, terminated, truncated, info = env.step(action)
+        frame = env.render()
+        if frame is not None:
+            frames.append(frame)
+        done = terminated or truncated
+        steps += 1
+    env.close()
+    if frames:
+        imageio.mimwrite(out_path, frames, fps=fps, macro_block_size=1)
+
+
 def main(args):
 
     os.makedirs(args.log_dir, exist_ok=True)
@@ -224,6 +246,8 @@ def main(args):
 
     # Save trained model
     model.save(os.path.join(args.log_dir, f"{args.algo}_{args.env}"))
+
+    save_rollout(model, args.env, os.path.join(args.log_dir, f"rollout_{args.algo}.mp4"))
 
     # --------------------------------------------------------
     # Evaluate after training

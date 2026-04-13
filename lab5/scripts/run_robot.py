@@ -1,84 +1,58 @@
-# run_policy_on_robot.py
-import time
-from dataclasses import dataclass
-from typing import Optional
-
+import argparse
 import numpy as np
-import tyro
+from stable_baselines3 import PPO
 
-from gello.env import RobotEnv
-from gello.robots.robot import PrintRobot
-from gello.zmq_core.robot_node import ZMQClientRobot
-from gello.zmq_core.camera_node import ZMQClientCamera
+from utils.xarm_pickplace_real_env import (
+    XArmRealEnvConfig,
+    XArmPickPlaceRealEnv,
+    FixedObjectPoseProvider,
 
-from scripts.policy import UniversalPolicy
+)
 
+pick_locations = {
+    "red" : [0.475,0.0847,0.172],
+    "green" : [0.331,0.233,0.172],
+    "yellow" : [0.432,0.199,0.172]
+} # in meters
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model-path", type=str, required=False, default="scripts/logs/improved_ppo_dense/ppo_gym_xarm/XarmPickPlaceDense-v0")
+    parser.add_argument("--robot-ip", type=str, required=True)
+    parser.add_argument("--episodes", type=int, default=5)
+    args = parser.parse_args()
 
-@dataclass
-class Args:
-    # robot + camera nodes are running on THIS machine
-    robot_port: int = 6001
-    wrist_camera_port: int = 5000
-    base_camera_port: int = 5001
-    hostname: str = "gadget.stdusr.yale.internal"
-    hz: int = 10
+    pose_provider = FixedObjectPoseProvider(
+    tcp_pos=pick_locations["red"]   # red cube: best sim-to-real geometry match
+    )
 
-    # debug / dev
-    mock: bool = False
-    max_steps: int = 10_000
-    print_every: int = 10  # steps
+    env = XArmPickPlaceRealEnv(
+        config=XArmRealEnvConfig(ip=args.robot_ip),
+        pose_provider=pose_provider,
+    )
 
+    model = PPO.load(args.model_path)
 
-def main(args: Args):
-    # --- env wiring ---
-    if args.mock:
-        robot_client = PrintRobot(8, dont_print=True)
-        camera_clients = {}
-    else:
-        robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
-        camera_clients = {
-            "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
-            "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
-        }
+    for ep in range(args.episodes):
+        obs, info = env.reset(seed=ep)
+        done = False
+        ep_reward = 0.0
 
-    env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients)
+        step = 0
+        while not done:
+            action, _ = model.predict(obs, deterministic=True)
+            obs, reward, terminated, truncated, info = env.step(action)
+            step += 1
+            ep_reward += reward
+            done = terminated or truncated
 
-    # --- policy ---
-    policy = UniversalPolicy()
-    policy.reset()
+        print(
+            f"Episode {ep}: reward={ep_reward:.3f}, "
+            f"success={info.get('is_success', False)}"
+        )
 
-    dt = 1.0 / args.hz
-
-    # RL-style loop
-    obs = env.get_obs()
-    t0 = time.time()
-
-    try:
-        for step in range(args.max_steps):
-            action_seq = policy.step(obs)                 # (K,8) or (1,8)
-            action_seq = np.asarray(action_seq, dtype=np.float32)
-
-            if action_seq.ndim == 1:                      # (8,) -> (1,8)
-                action_seq = action_seq[None, :]
-
-            # execute the whole chunk
-            for a in action_seq:
-                a = np.asarray(a, dtype=np.float32).reshape(-1)  # ensure (8,)
-                a = np.asarray([ 0.024528, -0.885107, -0.065961,  0.704097, -0.001534,  0.909635,  0.027596, -0.      ])
-                obs = env.step(a)
-
-                if args.print_every > 0 and (step % args.print_every == 0):
-                    elapsed = time.time() - t0
-                    jp = obs["joint_positions"]
-                    print(f"[step {step:05d} | {elapsed:6.1f}s] joints[0:3]={np.array(jp)[:3]}")
-
-                time.sleep(dt)
-
-    except KeyboardInterrupt:
-        print("\nStopped (Ctrl+C).")
-
+    env.close()
 
 
 if __name__ == "__main__":
-    main(tyro.cli(Args))
+    main()

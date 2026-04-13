@@ -17,6 +17,7 @@ ENVS = [
     "gym_xarm/XarmPickPlaceSparse-v0",
 ]
 
+
 def run_env(env_id: str, render_mode: str, steps: int, episodes: int, out_dir: str | None):
     print(f"\n=== {env_id} | render_mode={render_mode} | steps={steps} | episodes={episodes} ===")
 
@@ -51,6 +52,7 @@ def run_env(env_id: str, render_mode: str, steps: int, episodes: int, out_dir: s
 
     env.close()
     # (video saving code unchanged)
+    save_rollout(model, args.env, os.path.join(args.log_dir, f"rollout_{args.algo}.mp4"))
     print(f"Done: {env_id}")
 
 
