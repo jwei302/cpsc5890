@@ -74,5 +74,7 @@ def rescale_and_linesearch(
 
         beta *= 0.5
 
+    # restore original params on failure to avoid leaving pi in a bad state
+    set_params(pi, old_params)
     print("The line search was failed!")
     return old_params
